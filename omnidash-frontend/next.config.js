@@ -1,5 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Remove static export - keep as regular Next.js app
+  
   // Enable experimental features for better performance
   experimental: {
     serverComponentsExternalPackages: ['@anthropic-ai/sdk', '@supabase/supabase-js']
@@ -77,14 +79,15 @@ const nextConfig = {
     ];
   },
 
-  async rewrites() {
-    return [
-      {
-        source: '/api/:path*',
-        destination: 'http://localhost:3000/api/:path*',
-      },
-    ];
-  },
+  // Disable rewrites for production deployment
+  // async rewrites() {
+  //   return [
+  //     {
+  //       source: '/api/:path*',
+  //       destination: 'http://localhost:3000/api/:path*',
+  //     },
+  //   ];
+  // },
 };
 
 module.exports = nextConfig;

@@ -1,6 +1,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
+import Link from 'next/link';
+import { useSocket } from '../components/SocketProvider';
 
 interface SocialAccount {
   id: string;
@@ -476,93 +479,59 @@ export default function SocialPage() {
   const [activeTab, setActiveTab] = useState('accounts');
 
   const fetchData = async () => {
-    try {
-      const response = await fetch('http://localhost:3000/api/social/accounts', {
-        credentials: 'include'
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setAccounts(data.accounts || []);
-        setScheduledPosts(data.scheduledPosts || []);
-      } else {
-        // Initialize with all platforms disconnected - no mock data
-        setAccounts([
-          {
-            id: '1',
-            platform: 'instagram',
-            username: '',
-            displayName: '',
-            isConnected: false,
-            lastSync: '',
-            followers: 0,
-            posts: 0,
-            engagement: 0
-          },
-          {
-            id: '2',
-            platform: 'twitter',
-            username: '',
-            displayName: '',
-            isConnected: false,
-            lastSync: '',
-            followers: 0,
-            posts: 0,
-            engagement: 0
-          },
-          {
-            id: '3',
-            platform: 'linkedin',
-            username: '',
-            displayName: '',
-            isConnected: false,
-            lastSync: '',
-            followers: 0,
-            posts: 0,
-            engagement: 0
-          },
-          {
-            id: '4',
-            platform: 'facebook',
-            username: '',
-            displayName: '',
-            isConnected: false,
-            lastSync: '',
-            followers: 0,
-            posts: 0,
-            engagement: 0
-          },
-          {
-            id: '5',
-            platform: 'tiktok',
-            username: '',
-            displayName: '',
-            isConnected: false,
-            lastSync: '',
-            followers: 0,
-            posts: 0,
-            engagement: 0
-          },
-          {
-            id: '6',
-            platform: 'youtube',
-            username: '',
-            displayName: '',
-            isConnected: false,
-            lastSync: '',
-            followers: 0,
-            posts: 0,
-            engagement: 0
-          }
-        ]);
+    if (!session) {
+      setLoading(false);
+      return;
+    }
 
-        // No scheduled posts when starting fresh
+    try {
+      const [accountsRes, postsRes, campaignsRes] = await Promise.all([
+        fetch('/api/social/accounts'),
+        fetch('/api/social/posts'),
+        fetch('/api/social/campaigns')
+      ]);
+      
+      if (accountsRes.ok) {
+        const accountsData = await accountsRes.json();
+        setAccounts(accountsData.accounts || []);
+      } else {
+        console.error('Failed to fetch accounts:', accountsRes.statusText);
+        setAccounts([]);
+      }
+
+      if (postsRes.ok) {
+        const postsData = await postsRes.json();
+        // Transform posts to match the scheduled posts format
+        const transformedPosts = postsData.posts?.map((post: any) => ({
+          id: post.id,
+          content: post.content,
+          platforms: [post.platform],
+          scheduledTime: post.scheduled_for || post.published_at,
+          status: post.status === 'published' ? 'published' : 
+                  post.status === 'scheduled' ? 'scheduled' :
+                  post.status === 'failed' ? 'failed' : 'scheduled',
+          mediaUrl: post.media_urls?.[0],
+          hashtags: post.content.match(/#\w+/g)?.map(tag => tag.slice(1)) || []
+        })) || [];
+        setScheduledPosts(transformedPosts);
+      } else {
+        console.error('Failed to fetch posts:', postsRes.statusText);
         setScheduledPosts([]);
       }
+
+      if (campaignsRes.ok) {
+        const campaignsData = await campaignsRes.json();
+        setCampaigns(campaignsData.campaigns || []);
+      } else {
+        console.error('Failed to fetch campaigns:', campaignsRes.statusText);
+        setCampaigns([]);
+      }
+
     } catch (error) {
       console.error('Failed to fetch social data:', error);
       setAccounts([]);
       setScheduledPosts([]);
+      setCampaigns([]);
     } finally {
       setLoading(false);
     }
@@ -573,75 +542,136 @@ export default function SocialPage() {
   }, []);
 
   const handleConnect = async (platform: string) => {
-    console.log(`Connecting to ${platform}...`);
-    
-    setAccounts(accounts.map(account => 
-      account.platform === platform 
-        ? { 
-            ...account, 
-            isConnected: true, 
-            username: `${platform}_user`,
-            displayName: 'Connected Account',
-            lastSync: new Date().toISOString(),
-            followers: Math.floor(Math.random() * 5000) + 500,
-            posts: Math.floor(Math.random() * 50) + 10,
-            engagement: Math.round((Math.random() * 5 + 1) * 10) / 10
-          }
-        : account
-    ));
+    try {
+      // Redirect to OAuth provider for authentication
+      const authUrl = `/api/auth/signin/${platform}?callbackUrl=${encodeURIComponent(window.location.href)}`;
+      window.location.href = authUrl;
+    } catch (error) {
+      console.error(`Failed to connect to ${platform}:`, error);
+    }
   };
 
   const handleDisconnect = async (accountId: string) => {
     if (!confirm('Are you sure you want to disconnect this account?')) return;
     
-    setAccounts(accounts.map(account => 
-      account.id === accountId 
-        ? { 
-            ...account, 
-            isConnected: false, 
-            username: '', 
-            displayName: '',
-            lastSync: '',
-            followers: 0,
-            posts: 0,
-            engagement: 0
-          }
-        : account
-    ));
+    try {
+      const response = await fetch('/api/social/accounts', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accountId })
+      });
+
+      if (response.ok) {
+        // Refresh data
+        await fetchData();
+      } else {
+        const error = await response.json();
+        console.error('Failed to disconnect account:', error);
+        alert('Failed to disconnect account. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error disconnecting account:', error);
+      alert('Failed to disconnect account. Please try again.');
+    }
   };
 
   const handleSync = async (accountId: string) => {
-    setAccounts(accounts.map(account => 
-      account.id === accountId 
-        ? { ...account, lastSync: new Date().toISOString() }
-        : account
-    ));
+    try {
+      const response = await fetch('/api/social/accounts', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accountId, action: 'sync' })
+      });
+
+      if (response.ok) {
+        // Update the account's last sync time in local state
+        setAccounts(accounts.map(account => 
+          account.id === accountId 
+            ? { ...account, lastSync: new Date().toISOString() }
+            : account
+        ));
+      } else {
+        console.error('Failed to sync account');
+      }
+    } catch (error) {
+      console.error('Error syncing account:', error);
+    }
   };
 
   const handleSchedulePost = async (postData: Partial<PostSchedule>) => {
-    const newPost: PostSchedule = {
-      id: Date.now().toString(),
-      content: postData.content || '',
-      platforms: postData.platforms || [],
-      scheduledTime: postData.scheduledTime || new Date().toISOString(),
-      status: 'scheduled',
-      hashtags: postData.hashtags || []
-    };
+    try {
+      const response = await fetch('/api/social/posts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          content: postData.content,
+          platforms: postData.platforms,
+          scheduled_for: postData.scheduledTime,
+          hashtags: postData.hashtags
+        })
+      });
 
-    setScheduledPosts([newPost, ...scheduledPosts]);
+      if (response.ok) {
+        const result = await response.json();
+        console.log('Posts created:', result);
+        // Refresh posts data
+        await fetchData();
+      } else {
+        const error = await response.json();
+        console.error('Failed to create post:', error);
+        alert(error.error || 'Failed to create post. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error creating post:', error);
+      alert('Failed to create post. Please try again.');
+    }
   };
 
   const handlePublishNow = async (postId: string) => {
-    setScheduledPosts(scheduledPosts.map(post => 
-      post.id === postId 
-        ? { ...post, status: 'published' as const }
-        : post
-    ));
+    try {
+      const response = await fetch('/api/social/posts', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ postId, action: 'publish_now' })
+      });
+
+      if (response.ok) {
+        // Update local state
+        setScheduledPosts(scheduledPosts.map(post => 
+          post.id === postId 
+            ? { ...post, status: 'published' as const }
+            : post
+        ));
+      } else {
+        const error = await response.json();
+        console.error('Failed to publish post:', error);
+        alert('Failed to publish post. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error publishing post:', error);
+      alert('Failed to publish post. Please try again.');
+    }
   };
 
   const handleDeletePost = async (postId: string) => {
-    if (!confirm('Are you sure you want to delete this scheduled post?')) return;
-    setScheduledPosts(scheduledPosts.filter(post => post.id !== postId));
+    if (!confirm('Are you sure you want to delete this post?')) return;
+    
+    try {
+      const response = await fetch(`/api/social/posts?postId=${postId}`, {
+        method: 'DELETE'
+      });
+
+      if (response.ok) {
+        setScheduledPosts(scheduledPosts.filter(post => post.id !== postId));
+      } else {
+        const error = await response.json();
+        console.error('Failed to delete post:', error);
+        alert('Failed to delete post. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error deleting post:', error);
+      alert('Failed to delete post. Please try again.');
+    }
   };
 
   const connectedAccounts = accounts.filter(account => account.isConnected);

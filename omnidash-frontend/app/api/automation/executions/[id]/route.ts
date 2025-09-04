@@ -1,20 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { automationEngine } from '../../../../automation-engine';
 
-// GET /api/automation/executions/[id] - Get execution details
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+interface RouteParams {
+  params: {
+    id: string;
+  };
+}
+
+export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
-    const execution = automationEngine.workflowEngine.getExecution(params.id);
+    const executionId = params.id;
     
-    if (!execution) {
-      return NextResponse.json(
-        { error: 'Execution not found' },
-        { status: 404 }
-      );
-    }
+    // Mock execution data
+    const execution = {
+      id: executionId,
+      workflowId: 'workflow-1',
+      status: 'completed',
+      startedAt: new Date(Date.now() - 30000).toISOString(),
+      completedAt: new Date().toISOString(),
+      duration: 30000,
+      progress: 100,
+      result: {
+        success: true,
+        output: 'Execution completed successfully'
+      }
+    };
 
     return NextResponse.json({ execution });
   } catch (error) {
@@ -26,37 +35,18 @@ export async function GET(
   }
 }
 
-// POST /api/automation/executions/[id]/cancel - Cancel execution
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
-    const { action } = await request.json();
-
-    switch (action) {
-      case 'cancel':
-        automationEngine.workflowEngine.cancelExecution(params.id);
-        return NextResponse.json({ message: 'Execution cancelled' });
-      
-      case 'pause':
-        automationEngine.workflowEngine.pauseExecution(params.id);
-        return NextResponse.json({ message: 'Execution paused' });
-      
-      case 'resume':
-        automationEngine.workflowEngine.resumeExecution(params.id);
-        return NextResponse.json({ message: 'Execution resumed' });
-      
-      default:
-        return NextResponse.json(
-          { error: 'Invalid action' },
-          { status: 400 }
-        );
-    }
+    const executionId = params.id;
+    
+    // Mock deletion
+    return NextResponse.json({
+      message: `Execution ${executionId} cancelled successfully`
+    });
   } catch (error) {
-    console.error('Error performing execution action:', error);
+    console.error('Error cancelling execution:', error);
     return NextResponse.json(
-      { error: 'Failed to perform action' },
+      { error: 'Failed to cancel execution' },
       { status: 500 }
     );
   }

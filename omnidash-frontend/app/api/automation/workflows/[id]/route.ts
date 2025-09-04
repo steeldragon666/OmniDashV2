@@ -1,20 +1,57 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { automationEngine } from '../../../../automation-engine';
 
-// GET /api/automation/workflows/[id] - Get specific workflow
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+interface RouteParams {
+  params: {
+    id: string;
+  };
+}
+
+export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
-    const workflow = automationEngine.workflowEngine.getWorkflow(params.id);
+    const workflowId = params.id;
     
-    if (!workflow) {
-      return NextResponse.json(
-        { error: 'Workflow not found' },
-        { status: 404 }
-      );
-    }
+    // Mock workflow data
+    const workflow = {
+      id: workflowId,
+      name: 'Content Generation Pipeline',
+      description: 'Automated content creation and social media posting',
+      status: 'active',
+      version: '1.0.0',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      definition: {
+        nodes: [
+          {
+            id: 'trigger-1',
+            type: 'webhook-trigger',
+            position: { x: 100, y: 100 },
+            data: { label: 'Content Request' }
+          },
+          {
+            id: 'action-1', 
+            type: 'ai-content-generation',
+            position: { x: 300, y: 100 },
+            data: { label: 'Generate Content' }
+          },
+          {
+            id: 'action-2',
+            type: 'social-post',
+            position: { x: 500, y: 100 },
+            data: { label: 'Post to Social' }
+          }
+        ],
+        edges: [
+          { id: 'e1-2', source: 'trigger-1', target: 'action-1' },
+          { id: 'e2-3', source: 'action-1', target: 'action-2' }
+        ]
+      },
+      executions: {
+        total: 45,
+        success: 43,
+        failed: 2,
+        success_rate: 95.6
+      }
+    };
 
     return NextResponse.json({ workflow });
   } catch (error) {
@@ -26,28 +63,21 @@ export async function GET(
   }
 }
 
-// PUT /api/automation/workflows/[id] - Update workflow
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function PUT(request: NextRequest, { params }: RouteParams) {
   try {
-    const updates = await request.json();
-    const workflow = automationEngine.workflowEngine.getWorkflow(params.id);
+    const workflowId = params.id;
+    const updateData = await request.json();
     
-    if (!workflow) {
-      return NextResponse.json(
-        { error: 'Workflow not found' },
-        { status: 404 }
-      );
-    }
+    // Mock workflow update
+    const workflow = {
+      id: workflowId,
+      ...updateData,
+      updated_at: new Date().toISOString()
+    };
 
-    // Update workflow (this would need to be implemented in WorkflowEngine)
-    const updatedWorkflow = { ...workflow, ...updates, updatedAt: new Date() };
-    
-    return NextResponse.json({ 
-      workflow: updatedWorkflow,
-      message: 'Workflow updated successfully' 
+    return NextResponse.json({
+      workflow,
+      message: 'Workflow updated successfully'
     });
   } catch (error) {
     console.error('Error updating workflow:', error);
@@ -58,23 +88,14 @@ export async function PUT(
   }
 }
 
-// DELETE /api/automation/workflows/[id] - Delete workflow
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
-    const workflow = automationEngine.workflowEngine.getWorkflow(params.id);
+    const workflowId = params.id;
     
-    if (!workflow) {
-      return NextResponse.json(
-        { error: 'Workflow not found' },
-        { status: 404 }
-      );
-    }
-
-    // Delete workflow (this would need to be implemented in WorkflowEngine)
-    return NextResponse.json({ message: 'Workflow deleted successfully' });
+    // Mock deletion
+    return NextResponse.json({
+      message: `Workflow ${workflowId} deleted successfully`
+    });
   } catch (error) {
     console.error('Error deleting workflow:', error);
     return NextResponse.json(

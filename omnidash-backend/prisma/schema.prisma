@@ -1,0 +1,378 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String   @id @default(cuid())
+  email       String   @unique
+  name        String?
+  avatar      String?
+  role        String   @default("user") // user, admin, super_admin
+  isActive    Boolean  @default(true)
+  lastLogin   DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Authentication
+  password    String?
+  googleId    String?  @unique
+  githubId    String?  @unique
+  microsoftId String?  @unique
+
+  // Profile settings
+  timezone    String   @default("UTC")
+  preferences Json?    // JSON object for user preferences
+  
+  // Relationships
+  brands      BrandMember[]
+  sessions    UserSession[]
+  
+  @@map("users")
+}
+
+model UserSession {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("user_sessions")
+}
+
+model Brand {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?
+  logo        String?
+  website     String?
+  industry    String?
+  
+  // Branding
+  themeConfig Json?    // Colors, fonts, etc.
+  
+  // Status
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relationships
+  members         BrandMember[]
+  socialAccounts  SocialAccount[]
+  posts          Post[]
+  contentQueue   ContentQueue[]
+  workflows      Workflow[]
+  analytics      AnalyticsData[]
+  sentiment      SentimentAnalysis[]
+  templates      ContentTemplate[]
+  
+  @@map("brands")
+}
+
+model BrandMember {
+  id          String   @id @default(cuid())
+  brandId     String
+  userId      String
+  role        String   // owner, admin, editor, viewer
+  permissions Json?    // Specific permissions object
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  brand Brand @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([brandId, userId])
+  @@map("brand_members")
+}
+
+model SocialAccount {
+  id           String   @id @default(cuid())
+  brandId      String
+  platform     String   // twitter, instagram, linkedin, tiktok, facebook
+  accountId    String   // Platform-specific account ID
+  username     String?  // Platform username/handle
+  displayName  String?  // Display name on platform
+  
+  // Authentication tokens
+  accessToken  String?
+  refreshToken String?
+  tokenExpires DateTime?
+  
+  // Account info
+  isActive     Boolean  @default(true)
+  followers    Int      @default(0)
+  following    Int      @default(0)
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  // Relationships
+  brand Brand @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  posts Post[]
+  
+  @@unique([brandId, platform, accountId])
+  @@map("social_accounts")
+}
+
+model Post {
+  id          String   @id @default(cuid())
+  brandId     String
+  socialAccountId String?
+  platform    String   // twitter, instagram, linkedin, tiktok, facebook
+  
+  // Content
+  content     String?
+  mediaUrls   String[] // Array of media URLs
+  hashtags    String[]
+  mentions    String[]
+  
+  // Scheduling
+  status      String   @default("draft") // draft, scheduled, published, failed
+  scheduledAt DateTime?
+  publishedAt DateTime?
+  
+  // Platform-specific data
+  platformId  String?  // ID from the social platform
+  platformData Json?   // Additional platform-specific data
+  
+  // Metadata
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relationships
+  brand         Brand          @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  socialAccount SocialAccount? @relation(fields: [socialAccountId], references: [id])
+  analytics     PostAnalytics[]
+  
+  @@map("posts")
+}
+
+model PostAnalytics {
+  id             String   @id @default(cuid())
+  postId         String
+  
+  // Engagement metrics
+  likes          Int      @default(0)
+  shares         Int      @default(0)
+  comments       Int      @default(0)
+  clicks         Int      @default(0)
+  reach          Int      @default(0)
+  impressions    Int      @default(0)
+  
+  // Calculated metrics
+  engagementRate Float    @default(0.0)
+  
+  // Time-based data
+  date           DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  
+  // Relationships
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  
+  @@unique([postId, date])
+  @@map("post_analytics")
+}
+
+model ContentQueue {
+  id             String   @id @default(cuid())
+  brandId        String
+  platform       String
+  
+  // Generated content
+  generatedContent Json   // Multiple content variations
+  selectedContent  String? // User-selected final content
+  
+  // AI generation data
+  aiProvider     String?  // claude, openai, manus
+  prompt         String?
+  generationData Json?
+  
+  // Status
+  status         String   @default("pending") // pending, approved, rejected, scheduled
+  approvalStatus String   @default("pending") // pending, approved, rejected
+  approvedBy     String?  // User ID who approved
+  
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  
+  // Relationships
+  brand Brand @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  
+  @@map("content_queue")
+}
+
+model ContentTemplate {
+  id           String   @id @default(cuid())
+  brandId      String
+  name         String
+  description  String?
+  category     String?  // promotional, educational, engagement, etc.
+  
+  // Template content
+  template     String   // Template with variables
+  variables    Json     // Variable definitions
+  platforms    String[] // Supported platforms
+  
+  // Usage stats
+  usageCount   Int      @default(0)
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  // Relationships
+  brand Brand @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  
+  @@map("content_templates")
+}
+
+model Workflow {
+  id          String   @id @default(cuid())
+  brandId     String
+  name        String
+  description String?
+  
+  // Workflow configuration
+  n8nWorkflowId String? // N8N workflow ID
+  triggerConfig Json    // Trigger configuration
+  actions       Json    // Workflow actions
+  
+  // Status
+  status      String   @default("inactive") // active, inactive, error
+  isActive    Boolean  @default(false)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relationships
+  brand Brand @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  logs  AutomationLog[]
+  
+  @@map("workflows")
+}
+
+model AutomationLog {
+  id          String   @id @default(cuid())
+  workflowId  String
+  executionId String?  // N8N execution ID
+  
+  // Execution data
+  status      String   // success, failure, partial
+  errorMessage String?
+  executionData Json?
+  
+  executedAt  DateTime @default(now())
+  
+  // Relationships
+  workflow Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  
+  @@map("automation_logs")
+}
+
+model AnalyticsData {
+  id         String   @id @default(cuid())
+  brandId    String
+  platform   String?  // null for brand-wide metrics
+  
+  // Metrics
+  date       DateTime
+  metricName String   // followers_count, engagement_rate, reach, etc.
+  metricValue Float
+  
+  // Additional context
+  metadata   Json?
+  
+  createdAt  DateTime @default(now())
+  
+  // Relationships
+  brand Brand @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  
+  @@unique([brandId, platform, date, metricName])
+  @@map("analytics_data")
+}
+
+model SentimentAnalysis {
+  id          String   @id @default(cuid())
+  brandId     String
+  
+  // Content analyzed
+  content     String
+  source      String   // post, comment, mention, news
+  platform    String?  // Source platform
+  
+  // Analysis results
+  sentiment   String   // positive, negative, neutral
+  score       Float    // -1.0 to 1.0
+  confidence  Float    // 0.0 to 1.0
+  keywords    String[]
+  entities    Json?    // Named entities found
+  
+  analyzedAt  DateTime @default(now())
+  
+  // Relationships
+  brand Brand @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  
+  @@map("sentiment_analysis")
+}
+
+model ApiKey {
+  id          String   @id @default(cuid())
+  brandId     String?  // null for user-level keys
+  userId      String?  // null for brand-level keys
+  
+  service     String   // openai, claude, google, twitter, etc.
+  keyName     String   // Descriptive name
+  encryptedKey String  // Encrypted API key
+  
+  // Permissions and limits
+  permissions Json?
+  rateLimit   Int?
+  
+  isActive    Boolean  @default(true)
+  expiresAt   DateTime?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@map("api_keys")
+}
+
+model SystemSettings {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     Json
+  category  String?  // system, features, limits, etc.
+  
+  updatedAt DateTime @updatedAt
+  
+  @@map("system_settings")
+}
+
+model UploadedFile {
+  id          String   @id @default(cuid())
+  fileName    String
+  filePath    String   // Path in storage
+  publicUrl   String?  // Public URL if applicable
+  size        Int      // File size in bytes
+  mimeType    String
+  folder      String?
+  brandId     String?  // Associated brand
+  userId      String?  // User who uploaded
+  isTemporary Boolean  @default(false)
+  isPublic    Boolean  @default(false)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@map("uploaded_files")
+}

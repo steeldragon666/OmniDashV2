@@ -1,68 +1,87 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { automationEngine } from '../../../automation-engine';
 
-// GET /api/automation/social/accounts - List social media accounts
+// GET /api/automation/social - List social automation data
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
-    const platform = searchParams.get('platform');
-    const activeOnly = searchParams.get('active') === 'true';
+    // Mock social automation data
+    const socialData = {
+      accounts: [
+        {
+          id: '1',
+          platform: 'twitter',
+          username: '@omnidash_demo',
+          isActive: true,
+          followers: 1250,
+          posts: 45,
+          engagement: 3.2
+        },
+        {
+          id: '2',
+          platform: 'instagram',
+          username: '@omnidash_demo',
+          isActive: true,
+          followers: 890,
+          posts: 32,
+          engagement: 4.1
+        }
+      ],
+      scheduledPosts: [
+        {
+          id: '1',
+          content: 'Check out our latest automation features! 🚀',
+          platforms: ['twitter', 'instagram'],
+          scheduledTime: new Date(Date.now() + 3600000).toISOString(),
+          status: 'scheduled'
+        }
+      ],
+      stats: {
+        totalPosts: 77,
+        scheduledPosts: 5,
+        engagementRate: 3.65,
+        totalFollowers: 2140
+      }
+    };
 
-    let accounts = automationEngine.socialPublisher.getAccounts();
-
-    // Filter by platform if specified
-    if (platform) {
-      accounts = accounts.filter(account => account.platform === platform);
-    }
-
-    // Filter by active status if specified
-    if (activeOnly) {
-      accounts = accounts.filter(account => account.isActive);
-    }
-
-    return NextResponse.json({ accounts });
+    return NextResponse.json(socialData);
   } catch (error) {
-    console.error('Error fetching social accounts:', error);
+    console.error('Error fetching social automation data:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch social accounts' },
+      { error: 'Failed to fetch social automation data' },
       { status: 500 }
     );
   }
 }
 
-// POST /api/automation/social/accounts - Add social media account
+// POST /api/automation/social - Create social automation
 export async function POST(request: NextRequest) {
   try {
-    const accountData = await request.json();
-    
-    // Validate required fields
-    if (!accountData.platform || !accountData.username || !accountData.accessToken) {
+    const body = await request.json();
+    const { type, config } = body;
+
+    if (!type || !config) {
       return NextResponse.json(
-        { error: 'Missing required fields: platform, username, accessToken' },
+        { error: 'Type and config are required' },
         { status: 400 }
       );
     }
 
-    const accountId = automationEngine.socialPublisher.addAccount({
-      platform: accountData.platform,
-      accountId: accountData.accountId || accountData.username,
-      username: accountData.username,
-      displayName: accountData.displayName || accountData.username,
-      accessToken: accountData.accessToken,
-      refreshToken: accountData.refreshToken,
-      tokenExpires: accountData.tokenExpires ? new Date(accountData.tokenExpires) : undefined,
-      permissions: accountData.permissions || [],
-      metadata: accountData.metadata || {}
-    });
-    
-    return NextResponse.json({ 
-      accountId,
-      message: 'Social media account added successfully' 
+    // Mock automation creation
+    const automation = {
+      id: `social-automation-${Date.now()}`,
+      type,
+      config,
+      status: 'active',
+      created_at: new Date().toISOString()
+    };
+
+    return NextResponse.json({
+      automation,
+      message: 'Social automation created successfully'
     }, { status: 201 });
   } catch (error) {
-    console.error('Error adding social account:', error);
+    console.error('Error creating social automation:', error);
     return NextResponse.json(
-      { error: 'Failed to add social account', details: (error as Error).message },
+      { error: 'Failed to create social automation' },
       { status: 500 }
     );
   }

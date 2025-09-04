@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { automationEngine } from '../../../automation-engine';
 
 // GET /api/automation/executions - List executions
 export async function GET(request: NextRequest) {
@@ -9,7 +8,40 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status');
     const limit = parseInt(searchParams.get('limit') || '50');
 
-    let executions = automationEngine.workflowEngine.getAllExecutions();
+    // Mock data for now - will be replaced with real database queries
+    const mockExecutions = [
+      {
+        id: '1',
+        workflowId: 'workflow-1',
+        status: 'completed',
+        startedAt: new Date().toISOString(),
+        completedAt: new Date().toISOString(),
+        duration: 5000,
+        progress: 100,
+        result: { success: true, message: 'Execution completed successfully' }
+      },
+      {
+        id: '2',
+        workflowId: 'workflow-2', 
+        status: 'running',
+        startedAt: new Date().toISOString(),
+        progress: 65,
+        result: null
+      },
+      {
+        id: '3',
+        workflowId: 'workflow-1',
+        status: 'failed',
+        startedAt: new Date().toISOString(),
+        completedAt: new Date().toISOString(),
+        duration: 2000,
+        progress: 30,
+        error: 'Connection timeout',
+        result: null
+      }
+    ];
+
+    let executions = mockExecutions;
 
     // Filter by workflow if specified
     if (workflowId) {
@@ -21,16 +53,49 @@ export async function GET(request: NextRequest) {
       executions = executions.filter(exec => exec.status === status);
     }
 
-    // Sort by start time (newest first) and limit
-    executions = executions
-      .sort((a, b) => b.startedAt.getTime() - a.startedAt.getTime())
-      .slice(0, limit);
+    // Limit results
+    executions = executions.slice(0, limit);
 
     return NextResponse.json({ executions });
   } catch (error) {
     console.error('Error fetching executions:', error);
     return NextResponse.json(
       { error: 'Failed to fetch executions' },
+      { status: 500 }
+    );
+  }
+}
+
+// POST /api/automation/executions - Start new execution
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { workflowId, input = {}, triggerType = 'manual' } = body;
+
+    if (!workflowId) {
+      return NextResponse.json({ error: 'Workflow ID is required' }, { status: 400 });
+    }
+
+    // Mock execution creation
+    const execution = {
+      id: `execution-${Date.now()}`,
+      workflowId,
+      status: 'running',
+      startedAt: new Date().toISOString(),
+      progress: 0,
+      triggerType,
+      input,
+      result: null
+    };
+
+    return NextResponse.json({ 
+      execution,
+      message: 'Execution started successfully' 
+    }, { status: 201 });
+  } catch (error) {
+    console.error('Error starting execution:', error);
+    return NextResponse.json(
+      { error: 'Failed to start execution' },
       { status: 500 }
     );
   }

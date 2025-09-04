@@ -1,19 +1,29 @@
 import { EventEmitter } from 'events';
 import { v4 as uuidv4 } from 'uuid';
+import { Workflow, WorkflowNode, WorkflowEdge, NodeExecutionResult } from '@/lib/types/workflow';
+import { supabase } from '@/lib/database/supabase';
+import { BullMQManager } from '@/lib/queue/BullMQManager';
+import { SocketIOServer } from '@/lib/realtime/SocketManager';
 
-// Workflow Types
+// Enhanced Workflow Types for React Flow Integration
 export interface WorkflowDefinition {
   id: string;
   name: string;
   description: string;
+  nodes: WorkflowNode[];
+  edges: WorkflowEdge[];
   triggers: WorkflowTrigger[];
-  actions: WorkflowAction[];
-  conditions?: WorkflowCondition[];
   version: string;
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
   metadata?: Record<string, any>;
+  settings: {
+    errorHandling: 'stop' | 'continue' | 'retry';
+    timeout: number;
+    retryOnFailure: boolean;
+    maxRetries: number;
+  };
 }
 
 export interface WorkflowTrigger {
@@ -33,10 +43,10 @@ export interface TriggerConfig {
 
 export interface WorkflowAction {
   id: string;
-  type: 'ai' | 'social' | 'data' | 'integration' | 'condition' | 'delay' | 'loop';
+  type: string; // Support all React Flow node types
   name: string;
   config: ActionConfig;
-  nextActions?: string[]; // IDs of next actions
+  nextActions?: string[];
   errorHandling?: ErrorHandlingConfig;
   retryPolicy?: RetryPolicy;
 }
@@ -216,33 +226,101 @@ export class WorkflowEngine extends EventEmitter {
         throw new Error('Workflow not found');
       }
 
-      // Execute actions in sequence
-      for (let i = 0; i < workflow.actions.length; i++) {
-        const action = workflow.actions[i];
-        execution.currentAction = action.id;
-        execution.progress = ((i + 1) / workflow.actions.length) * 100;
+          // Execute nodes using React Flow definition
+      const nodes = workflow.nodes || [];
+      const edges = workflow.edges || [];
+      
+      if (nodes.length === 0) {
+        throw new Error('Workflow has no nodes to execute');
+      }
 
-        // Check conditions if any
-        if (await this.shouldExecuteAction(action, execution)) {
-          const result = await this.executeAction(action, execution);
-          execution.results.push(result);
+      // Find starting nodes (nodes without incoming edges)
+      const startNodes = this.findStartingNodes(nodes, edges);
+      
+      if (startNodes.length === 0) {
+        throw new Error('No starting nodes found in workflow');
+      }
 
-          if (result.status === 'failure' && action.errorHandling?.strategy !== 'ignore') {
-            await this.handleActionError(action, result, execution);
-            if (execution.status === 'failed') break;
-          }
-        } else {
-          execution.results.push({
-            actionId: action.id,
+      // Execute nodes in topological order
+      const executionOrder = this.calculateExecutionOrder(nodes, edges);
+      const nodeResults = new Map<string, NodeExecutionResult>();
+
+      for (let i = 0; i < executionOrder.length; i++) {
+        const node = executionOrder[i];
+        execution.currentAction = node.id;
+        execution.progress = ((i + 1) / executionOrder.length) * 100;
+
+        // Check if node dependencies are satisfied
+        const dependencies = this.getNodeDependencies(node.id, edges, nodeResults);
+        const canExecute = dependencies.every(dep => 
+          nodeResults.has(dep) && nodeResults.get(dep)!.status === 'success'
+        );
+
+        if (!canExecute && dependencies.length > 0) {
+          const result: NodeExecutionResult = {
+            nodeId: node.id,
             status: 'skipped',
-            startedAt: new Date(),
-            completedAt: new Date(),
-            duration: 0
-          });
+            error: 'Dependencies not satisfied',
+            duration: 0,
+            timestamp: new Date().toISOString()
+          };
+          nodeResults.set(node.id, result);
+          continue;
         }
 
-        this.emit('execution:progress', execution);
+        try {
+          // Convert node to action format for execution
+          const action = this.convertNodeToAction(node);
+          const result = await this.executeNodeAction(action, execution, nodeResults);
+          
+          const nodeResult: NodeExecutionResult = {
+            nodeId: node.id,
+            status: result.status === 'success' ? 'success' : 'error',
+            output: result.output,
+            error: result.error?.message,
+            duration: result.duration,
+            timestamp: new Date().toISOString()
+          };
+
+          nodeResults.set(node.id, nodeResult);
+          execution.results.push(result);
+
+          // Handle node failure based on workflow settings
+          if (nodeResult.status === 'error' && workflow.settings?.errorHandling === 'stop') {
+            execution.status = 'failed';
+            execution.error = new Error(`Node ${node.data.label} failed: ${nodeResult.error}`);
+            break;
+          }
+
+          // Emit progress update with node-specific data
+          this.emit('execution:progress', {
+            ...execution,
+            currentNode: node,
+            nodeResult,
+            completedNodes: Array.from(nodeResults.values())
+          });
+
+        } catch (error) {
+          const nodeResult: NodeExecutionResult = {
+            nodeId: node.id,
+            status: 'error',
+            error: (error as Error).message,
+            duration: 0,
+            timestamp: new Date().toISOString()
+          };
+          
+          nodeResults.set(node.id, nodeResult);
+          
+          if (workflow.settings?.errorHandling === 'stop') {
+            execution.status = 'failed';
+            execution.error = error as Error;
+            break;
+          }
+        }
       }
+
+      // Store final node results in execution context
+      execution.context.output.nodeResults = Array.from(nodeResults.values());
 
       if (execution.status !== 'failed') {
         execution.status = 'completed';
@@ -395,38 +473,408 @@ export class WorkflowEngine extends EventEmitter {
     return true;
   }
 
-  // Register default action handlers
+  // Register default node handlers for React Flow nodes
   private registerDefaultHandlers() {
-    // AI Action Handler
-    this.registerActionHandler('ai', {
+    // Manual Trigger Handler
+    this.registerActionHandler('manual-trigger', {
       execute: async (action, context) => {
-        // AI content generation logic
-        return { generated: 'AI content here' };
+        return {
+          triggered: true,
+          timestamp: new Date().toISOString(),
+          data: context.input
+        };
       }
     });
 
-    // Social Media Action Handler
-    this.registerActionHandler('social', {
+    // Webhook Trigger Handler
+    this.registerActionHandler('webhook-trigger', {
       execute: async (action, context) => {
-        // Social media posting logic
-        return { posted: true, postId: 'abc123' };
+        const { method, path } = action.config.parameters || {};
+        return {
+          webhook: true,
+          method: method || 'POST',
+          path: path || '/webhook',
+          receivedData: context.input
+        };
       }
     });
 
-    // Data Action Handler
-    this.registerActionHandler('data', {
+    // Schedule Trigger Handler
+    this.registerActionHandler('schedule-trigger', {
       execute: async (action, context) => {
-        // Data operations logic
-        return { data: 'processed' };
+        const { cron, timezone } = action.config.parameters || {};
+        return {
+          scheduled: true,
+          cron: cron || '0 9 * * *',
+          timezone: timezone || 'UTC',
+          nextRun: this.calculateNextCronRun(cron || '0 9 * * *')
+        };
       }
     });
 
-    // Delay Action Handler
+    // Email Trigger Handler
+    this.registerActionHandler('email-trigger', {
+      execute: async (action, context) => {
+        const { folder, filters } = action.config.parameters || {};
+        // This would integrate with Gmail API
+        return {
+          emailReceived: true,
+          folder: folder || 'INBOX',
+          filters: filters || {},
+          mockEmail: {
+            from: 'test@example.com',
+            subject: 'Test Email',
+            body: 'This is a test email for workflow execution.'
+          }
+        };
+      }
+    });
+
+    // HTTP Request Action Handler
+    this.registerActionHandler('http-action', {
+      execute: async (action, context) => {
+        const { url, method, headers, body } = action.config.parameters || {};
+        
+        try {
+          const response = await fetch(url, {
+            method: method || 'GET',
+            headers: { 'Content-Type': 'application/json', ...(headers || {}) },
+            body: body ? JSON.stringify(body) : undefined
+          });
+          
+          const data = await response.json();
+          
+          return {
+            success: true,
+            status: response.status,
+            data,
+            url,
+            method: method || 'GET'
+          };
+        } catch (error) {
+          throw new Error(`HTTP request failed: ${error}`);
+        }
+      }
+    });
+
+    // Social Media Post Handler
+    this.registerActionHandler('social-action', {
+      execute: async (action, context) => {
+        const { platform, content, imageUrl } = action.config.parameters || {};
+        
+        // This would integrate with actual social media APIs
+        const platforms = ['twitter', 'facebook', 'instagram', 'linkedin'];
+        
+        if (!platforms.includes(platform)) {
+          throw new Error(`Unsupported platform: ${platform}`);
+        }
+        
+        return {
+          posted: true,
+          platform,
+          content,
+          imageUrl,
+          postId: `${platform}_${uuidv4()}`,
+          url: `https://${platform}.com/post/${uuidv4()}`,
+          timestamp: new Date().toISOString()
+        };
+      }
+    });
+
+    // Email Action Handler
+    this.registerActionHandler('email-action', {
+      execute: async (action, context) => {
+        const { to, subject, body, attachments } = action.config.parameters || {};
+        
+        // This would integrate with email service (Gmail, SendGrid, etc.)
+        return {
+          sent: true,
+          to,
+          subject,
+          body,
+          attachments: attachments || [],
+          messageId: `msg_${uuidv4()}`,
+          timestamp: new Date().toISOString()
+        };
+      }
+    });
+
+    // Database Action Handler
+    this.registerActionHandler('database-action', {
+      execute: async (action, context) => {
+        const { operation, table, data, query } = action.config.parameters || {};
+        
+        try {
+          let result;
+          
+          switch (operation) {
+            case 'insert':
+              result = await supabase.from(table).insert(data).select();
+              break;
+            case 'update':
+              result = await supabase.from(table).update(data).match(query || {}).select();
+              break;
+            case 'delete':
+              result = await supabase.from(table).delete().match(query || {}).select();
+              break;
+            case 'select':
+            default:
+              result = await supabase.from(table).select('*').match(query || {});
+              break;
+          }
+          
+          if (result.error) {
+            throw new Error(result.error.message);
+          }
+          
+          return {
+            success: true,
+            operation,
+            table,
+            data: result.data,
+            count: result.data?.length || 0
+          };
+        } catch (error) {
+          throw new Error(`Database operation failed: ${error}`);
+        }
+      }
+    });
+
+    // JavaScript Code Action Handler
+    this.registerActionHandler('javascript-action', {
+      execute: async (action, context) => {
+        const { code } = action.config.parameters || {};
+        
+        if (!code) {
+          throw new Error('JavaScript code is required');
+        }
+        
+        try {
+          // Create a safe execution environment
+          const func = new Function('context', 'require', `
+            "use strict";
+            ${code}
+          `);
+          
+          const result = await func(context, null); // Disable require for security
+          
+          return {
+            executed: true,
+            result,
+            code: code.substring(0, 100) + (code.length > 100 ? '...' : '')
+          };
+        } catch (error) {
+          throw new Error(`JavaScript execution failed: ${error}`);
+        }
+      }
+    });
+
+    // File Operations Handler
+    this.registerActionHandler('file-action', {
+      execute: async (action, context) => {
+        const { operation, fileName, content, encoding } = action.config.parameters || {};
+        
+        // This would integrate with file storage service
+        return {
+          success: true,
+          operation,
+          fileName,
+          fileSize: content?.length || 0,
+          encoding: encoding || 'utf8',
+          timestamp: new Date().toISOString()
+        };
+      }
+    });
+
+    // Condition/If-Else Handler
+    this.registerActionHandler('condition', {
+      execute: async (action, context) => {
+        const { conditions, operator } = action.config.parameters || {};
+        
+        if (!conditions || conditions.length === 0) {
+          return { result: true, message: 'No conditions specified' };
+        }
+        
+        let result = operator === 'or' ? false : true;
+        
+        for (const condition of conditions) {
+          const { field, comparison, value } = condition;
+          const contextValue = this.getValueFromContext(field, context);
+          const conditionResult = this.evaluateCondition(contextValue, comparison, value);
+          
+          if (operator === 'or') {
+            result = result || conditionResult;
+          } else {
+            result = result && conditionResult;
+          }
+        }
+        
+        return {
+          result,
+          conditions,
+          operator: operator || 'and',
+          evaluation: conditions.map(c => ({
+            field: c.field,
+            actual: this.getValueFromContext(c.field, context),
+            expected: c.value,
+            comparison: c.comparison,
+            result: this.evaluateCondition(
+              this.getValueFromContext(c.field, context), 
+              c.comparison, 
+              c.value
+            )
+          }))
+        };
+      }
+    });
+
+    // Switch/Multiple Conditions Handler
+    this.registerActionHandler('switch-condition', {
+      execute: async (action, context) => {
+        const { field, cases, defaultCase } = action.config.parameters || {};
+        const value = this.getValueFromContext(field, context);
+        
+        for (const caseItem of cases || []) {
+          if (caseItem.value === value) {
+            return {
+              matched: true,
+              field,
+              value,
+              matchedCase: caseItem,
+              result: caseItem.result
+            };
+          }
+        }
+        
+        return {
+          matched: false,
+          field,
+          value,
+          defaultCase,
+          result: defaultCase
+        };
+      }
+    });
+
+    // Delay/Wait Handler
     this.registerActionHandler('delay', {
       execute: async (action, context) => {
-        const delay = action.config.parameters?.delay || 1000;
+        const { duration, unit } = action.config.parameters || {};
+        const delay = this.convertToMilliseconds(duration || 1000, unit || 'ms');
+        
         await this.delay(delay);
-        return { delayed: delay };
+        
+        return {
+          delayed: true,
+          duration: delay,
+          unit: unit || 'ms',
+          startTime: new Date().toISOString()
+        };
+      }
+    });
+
+    // Data Transform Handler
+    this.registerActionHandler('data-transform', {
+      execute: async (action, context) => {
+        const { transformations } = action.config.parameters || {};
+        let data = { ...context.variables };
+        
+        for (const transform of transformations || []) {
+          switch (transform.type) {
+            case 'map':
+              if (Array.isArray(data[transform.source])) {
+                data[transform.target] = data[transform.source].map(
+                  item => transform.mapping(item)
+                );
+              }
+              break;
+            case 'filter':
+              if (Array.isArray(data[transform.source])) {
+                data[transform.target] = data[transform.source].filter(
+                  item => transform.condition(item)
+                );
+              }
+              break;
+            case 'format':
+              data[transform.target] = this.formatValue(
+                data[transform.source], 
+                transform.format
+              );
+              break;
+          }
+        }
+        
+        return {
+          transformed: true,
+          transformations: transformations?.length || 0,
+          data
+        };
+      }
+    });
+
+    // Variable Setter Handler
+    this.registerActionHandler('variable-setter', {
+      execute: async (action, context) => {
+        const { variables } = action.config.parameters || {};
+        
+        for (const [key, value] of Object.entries(variables || {})) {
+          context.variables[key] = value;
+        }
+        
+        return {
+          set: true,
+          variables: Object.keys(variables || {}),
+          count: Object.keys(variables || {}).length
+        };
+      }
+    });
+
+    // Logger Handler
+    this.registerActionHandler('logger', {
+      execute: async (action, context) => {
+        const { message, level, data } = action.config.parameters || {};
+        
+        const logEntry = {
+          timestamp: new Date().toISOString(),
+          level: level || 'info',
+          message: message || 'Log entry',
+          data: data || {},
+          context: {
+            variables: Object.keys(context.variables),
+            input: Object.keys(context.input),
+            output: Object.keys(context.output)
+          }
+        };
+        
+        console.log(`[${logEntry.level.toUpperCase()}] ${logEntry.message}`, logEntry);
+        
+        return {
+          logged: true,
+          entry: logEntry
+        };
+      }
+    });
+
+    // Notification Handler
+    this.registerActionHandler('notification-action', {
+      execute: async (action, context) => {
+        const { title, message, channels, priority } = action.config.parameters || {};
+        
+        // This would integrate with notification services
+        const notification = {
+          id: uuidv4(),
+          title: title || 'Workflow Notification',
+          message: message || 'A workflow step has completed',
+          channels: channels || ['email'],
+          priority: priority || 'normal',
+          timestamp: new Date().toISOString(),
+          delivered: true
+        };
+        
+        return {
+          sent: true,
+          notification
+        };
       }
     });
   }
@@ -509,6 +957,333 @@ export class WorkflowEngine extends EventEmitter {
 
   public stop(): void {
     this.isRunning = false;
+  }
+
+  // Helper methods for node-based execution
+  private findStartingNodes(nodes: WorkflowNode[], edges: WorkflowEdge[]): WorkflowNode[] {
+    const nodesWithIncoming = new Set(edges.map(edge => edge.target));
+    return nodes.filter(node => !nodesWithIncoming.has(node.id));
+  }
+
+  private calculateExecutionOrder(nodes: WorkflowNode[], edges: WorkflowEdge[]): WorkflowNode[] {
+    const visited = new Set<string>();
+    const visiting = new Set<string>();
+    const order: WorkflowNode[] = [];
+    const nodeMap = new Map(nodes.map(n => [n.id, n]));
+
+    const visit = (nodeId: string) => {
+      if (visiting.has(nodeId)) {
+        throw new Error(`Circular dependency detected involving node ${nodeId}`);
+      }
+      
+      if (visited.has(nodeId)) {
+        return;
+      }
+
+      visiting.add(nodeId);
+      
+      // Visit dependencies first
+      const dependencies = edges
+        .filter(edge => edge.target === nodeId)
+        .map(edge => edge.source);
+      
+      for (const depId of dependencies) {
+        visit(depId);
+      }
+      
+      visiting.delete(nodeId);
+      visited.add(nodeId);
+      
+      const node = nodeMap.get(nodeId);
+      if (node) {
+        order.push(node);
+      }
+    };
+
+    // Start with nodes that have no dependencies
+    const startNodes = this.findStartingNodes(nodes, edges);
+    for (const startNode of startNodes) {
+      visit(startNode.id);
+    }
+
+    // Visit any remaining nodes (in case of disconnected components)
+    for (const node of nodes) {
+      if (!visited.has(node.id)) {
+        visit(node.id);
+      }
+    }
+
+    return order;
+  }
+
+  private getNodeDependencies(nodeId: string, edges: WorkflowEdge[], results: Map<string, NodeExecutionResult>): string[] {
+    return edges
+      .filter(edge => edge.target === nodeId)
+      .map(edge => edge.source);
+  }
+
+  private convertNodeToAction(node: WorkflowNode): WorkflowAction {
+    return {
+      id: node.id,
+      type: node.type,
+      name: node.data.label,
+      config: {
+        parameters: node.data.config || {},
+        timeout: 30000
+      }
+    };
+  }
+
+  private async executeNodeAction(
+    action: WorkflowAction,
+    execution: WorkflowExecution,
+    nodeResults: Map<string, NodeExecutionResult>
+  ): Promise<ExecutionResult> {
+    const startedAt = new Date();
+    
+    try {
+      // Enhance context with previous node outputs
+      const enhancedContext = {
+        ...execution.context,
+        nodeResults: Object.fromEntries(nodeResults),
+        previousOutputs: Array.from(nodeResults.values())
+          .filter(result => result.output)
+          .reduce((acc, result) => ({ ...acc, [result.nodeId]: result.output }), {})
+      };
+
+      const handler = this.actionHandlers.get(action.type);
+      if (!handler) {
+        throw new Error(`No handler for node type: ${action.type}`);
+      }
+
+      const output = await this.executeWithTimeout(
+        handler.execute(action, enhancedContext),
+        action.config.timeout || 30000
+      );
+
+      const result: ExecutionResult = {
+        actionId: action.id,
+        status: 'success',
+        output,
+        startedAt,
+        completedAt: new Date(),
+        duration: Date.now() - startedAt.getTime()
+      };
+
+      // Store output for dependent nodes
+      execution.context.variables[action.id] = output;
+      
+      this.emit('node:success', { node: action, result, execution });
+      return result;
+
+    } catch (error) {
+      const result: ExecutionResult = {
+        actionId: action.id,
+        status: 'failure',
+        error: error as Error,
+        startedAt,
+        completedAt: new Date(),
+        duration: Date.now() - startedAt.getTime()
+      };
+
+      this.emit('node:failure', { node: action, result, execution });
+      return result;
+    }
+  }
+
+  private calculateNextCronRun(cron: string): string {
+    // Simple cron calculation - in production use a proper cron library
+    const now = new Date();
+    const nextRun = new Date(now.getTime() + 24 * 60 * 60 * 1000); // Next day
+    return nextRun.toISOString();
+  }
+
+  private getValueFromContext(path: string, context: WorkflowContext): any {
+    const parts = path.split('.');
+    let value: any = context;
+    
+    for (const part of parts) {
+      value = value?.[part];
+      if (value === undefined) break;
+    }
+    
+    return value;
+  }
+
+  private evaluateCondition(actual: any, comparison: string, expected: any): boolean {
+    switch (comparison) {
+      case 'equals':
+      case '==':
+        return actual == expected;
+      case 'not_equals':
+      case '!=':
+        return actual != expected;
+      case 'greater_than':
+      case '>':
+        return actual > expected;
+      case 'less_than':
+      case '<':
+        return actual < expected;
+      case 'greater_equal':
+      case '>=':
+        return actual >= expected;
+      case 'less_equal':
+      case '<=':
+        return actual <= expected;
+      case 'contains':
+        return String(actual).includes(String(expected));
+      case 'starts_with':
+        return String(actual).startsWith(String(expected));
+      case 'ends_with':
+        return String(actual).endsWith(String(expected));
+      case 'regex':
+        return new RegExp(expected).test(String(actual));
+      case 'is_empty':
+        return !actual || actual === '' || (Array.isArray(actual) && actual.length === 0);
+      case 'is_not_empty':
+        return actual && actual !== '' && (!Array.isArray(actual) || actual.length > 0);
+      default:
+        return false;
+    }
+  }
+
+  private convertToMilliseconds(duration: number, unit: string): number {
+    switch (unit) {
+      case 'ms':
+      case 'milliseconds':
+        return duration;
+      case 's':
+      case 'seconds':
+        return duration * 1000;
+      case 'm':
+      case 'minutes':
+        return duration * 60 * 1000;
+      case 'h':
+      case 'hours':
+        return duration * 60 * 60 * 1000;
+      case 'd':
+      case 'days':
+        return duration * 24 * 60 * 60 * 1000;
+      default:
+        return duration;
+    }
+  }
+
+  private formatValue(value: any, format: string): any {
+    if (!value) return value;
+    
+    switch (format) {
+      case 'uppercase':
+        return String(value).toUpperCase();
+      case 'lowercase':
+        return String(value).toLowerCase();
+      case 'capitalize':
+        return String(value).charAt(0).toUpperCase() + String(value).slice(1).toLowerCase();
+      case 'json':
+        return JSON.stringify(value, null, 2);
+      case 'csv':
+        if (Array.isArray(value)) {
+          return value.map(item => 
+            typeof item === 'object' ? Object.values(item).join(',') : String(item)
+          ).join('\n');
+        }
+        return String(value);
+      case 'date_iso':
+        return new Date(value).toISOString();
+      case 'date_local':
+        return new Date(value).toLocaleString();
+      default:
+        return value;
+    }
+  }
+
+  // Enhanced workflow validation for React Flow
+  public validateWorkflowDefinition(workflow: WorkflowDefinition): { isValid: boolean; errors: string[] } {
+    const errors: string[] = [];
+    
+    if (!workflow.nodes || workflow.nodes.length === 0) {
+      errors.push('Workflow must contain at least one node');
+    }
+    
+    // Check for orphaned nodes
+    const startNodes = this.findStartingNodes(workflow.nodes || [], workflow.edges || []);
+    if (startNodes.length === 0 && (workflow.nodes?.length || 0) > 0) {
+      errors.push('Workflow must have at least one starting node (node without incoming connections)');
+    }
+    
+    // Check for circular dependencies
+    try {
+      this.calculateExecutionOrder(workflow.nodes || [], workflow.edges || []);
+    } catch (error) {
+      errors.push(`Circular dependency detected: ${(error as Error).message}`);
+    }
+    
+    // Validate node configurations
+    for (const node of workflow.nodes || []) {
+      if (!node.id || !node.type) {
+        errors.push(`Node ${node.data?.label || 'unknown'} is missing id or type`);
+      }
+      
+      if (!this.actionHandlers.has(node.type)) {
+        errors.push(`No handler available for node type: ${node.type}`);
+      }
+    }
+    
+    // Validate edges
+    const nodeIds = new Set((workflow.nodes || []).map(n => n.id));
+    for (const edge of workflow.edges || []) {
+      if (!nodeIds.has(edge.source)) {
+        errors.push(`Edge references non-existent source node: ${edge.source}`);
+      }
+      if (!nodeIds.has(edge.target)) {
+        errors.push(`Edge references non-existent target node: ${edge.target}`);
+      }
+    }
+    
+    return {
+      isValid: errors.length === 0,
+      errors
+    };
+  }
+
+  // Real-time execution methods
+  public async executeWorkflowRealTime(
+    workflowId: string,
+    input: Record<string, any> = {},
+    socketManager?: SocketIOServer
+  ): Promise<WorkflowExecution> {
+    const execution = await this.executeWorkflow(workflowId, input);
+    
+    // Set up real-time progress updates
+    if (socketManager) {
+      this.on('execution:progress', (data) => {
+        if (data.id === execution.id) {
+          socketManager.sendToWorkflow(workflowId, 'execution:progress', data);
+        }
+      });
+      
+      this.on('node:success', (data) => {
+        if (data.execution.id === execution.id) {
+          socketManager.sendToWorkflow(workflowId, 'node:completed', {
+            nodeId: data.node.id,
+            result: data.result,
+            timestamp: new Date().toISOString()
+          });
+        }
+      });
+      
+      this.on('node:failure', (data) => {
+        if (data.execution.id === execution.id) {
+          socketManager.sendToWorkflow(workflowId, 'node:failed', {
+            nodeId: data.node.id,
+            error: data.result.error?.message,
+            timestamp: new Date().toISOString()
+          });
+        }
+      });
+    }
+    
+    return execution;
   }
 }
 

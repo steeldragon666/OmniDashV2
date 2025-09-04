@@ -1,0 +1,338 @@
+/* SuperDesign Dashboard Styles */
+
+:root {
+    --sd-primary: var(--vscode-button-background);
+    --sd-primary-hover: var(--vscode-button-hoverBackground);
+    --sd-secondary: var(--vscode-button-secondaryBackground);
+    --sd-secondary-hover: var(--vscode-button-secondaryHoverBackground);
+    --sd-surface: var(--vscode-editor-background);
+    --sd-surface-elevated: var(--vscode-editorWidget-background);
+    --sd-border: var(--vscode-panel-border);
+    --sd-text-primary: var(--vscode-foreground);
+    --sd-text-secondary: var(--vscode-descriptionForeground);
+    --sd-success: #4caf50;
+    --sd-warning: #ff9800;
+    --sd-error: #f44336;
+    --sd-radius: 8px;
+    --sd-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Reset and base */
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--vscode-font-family);
+    font-size: var(--vscode-font-size);
+    line-height: 1.6;
+    color: var(--sd-text-primary);
+    background: var(--sd-surface);
+    margin: 0;
+    padding: 0;
+}
+
+/* Dashboard container */
+.dashboard-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 16px;
+}
+
+/* Header */
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--sd-border);
+}
+
+.dashboard-title {
+    font-size: 24px;
+    font-weight: 600;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.dashboard-title .codicon {
+    font-size: 20px;
+}
+
+.header-actions {
+    display: flex;
+    gap: 8px;
+}
+
+/* Buttons */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border: none;
+    border-radius: var(--sd-radius);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+}
+
+.btn-primary {
+    background: var(--sd-primary);
+    color: var(--vscode-button-foreground);
+}
+
+.btn-primary:hover {
+    background: var(--sd-primary-hover);
+}
+
+.btn-secondary {
+    background: var(--sd-secondary);
+    color: var(--vscode-button-secondaryForeground);
+}
+
+.btn-secondary:hover {
+    background: var(--sd-secondary-hover);
+}
+
+/* Stats section */
+.stats-section {
+    margin-bottom: 32px;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+}
+
+.stat-card {
+    background: var(--sd-surface-elevated);
+    border: 1px solid var(--sd-border);
+    border-radius: var(--sd-radius);
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    transition: transform 0.2s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+}
+
+.stat-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+}
+
+.stat-card.running .stat-icon {
+    background: rgba(76, 175, 80, 0.2);
+    color: var(--sd-success);
+}
+
+.stat-card.stopped .stat-icon {
+    background: rgba(158, 158, 158, 0.2);
+    color: var(--vscode-descriptionForeground);
+}
+
+.stat-card.total .stat-icon {
+    background: rgba(33, 150, 243, 0.2);
+    color: #2196f3;
+}
+
+.stat-content {
+    flex: 1;
+}
+
+.stat-number {
+    font-size: 24px;
+    font-weight: 600;
+    line-height: 1;
+    margin-bottom: 4px;
+}
+
+.stat-label {
+    font-size: 12px;
+    color: var(--sd-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Codespaces section */
+.codespaces-section {
+    margin-bottom: 32px;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.section-header h2 {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0;
+}
+
+.filter-tabs {
+    display: flex;
+    gap: 4px;
+}
+
+.filter-tab {
+    padding: 6px 12px;
+    border: none;
+    background: transparent;
+    color: var(--sd-text-secondary);
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.filter-tab:hover {
+    background: var(--vscode-list-hoverBackground);
+    color: var(--sd-text-primary);
+}
+
+.filter-tab.active {
+    background: var(--sd-primary);
+    color: var(--vscode-button-foreground);
+}
+
+.codespaces-list {
+    background: var(--sd-surface-elevated);
+    border: 1px solid var(--sd-border);
+    border-radius: var(--sd-radius);
+    overflow: hidden;
+}
+
+/* Quick actions */
+.quick-actions-section h2 {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0 0 16px 0;
+}
+
+.actions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+}
+
+.action-card {
+    background: var(--sd-surface-elevated);
+    border: 1px solid var(--sd-border);
+    border-radius: var(--sd-radius);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    color: var(--sd-text-primary);
+}
+
+.action-card:hover {
+    background: var(--vscode-list-hoverBackground);
+    transform: translateY(-2px);
+}
+
+.action-card .codicon {
+    font-size: 24px;
+    color: var(--sd-text-secondary);
+}
+
+.action-card span:not(.codicon) {
+    font-size: 12px;
+    font-weight: 500;
+    text-align: center;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .dashboard-header {
+        flex-direction: column;
+        gap: 16px;
+        align-items: flex-start;
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .section-header {
+        flex-direction: column;
+        gap: 12px;
+        align-items: flex-start;
+    }
+    
+    .actions-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* Dark theme adjustments */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --sd-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+}
+
+/* Animation utilities */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.slide-in {
+    animation: slideIn 0.3s ease;
+}
+
+/* Loading states */
+.loading {
+    position: relative;
+    overflow: hidden;
+}
+
+.loading::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.1),
+        transparent
+    );
+    animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+    0% { left: -100%; }
+    100% { left: 100%; }
+}

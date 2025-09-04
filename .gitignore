@@ -1,0 +1,9 @@
+omnidash-backend/node_modules/
+omnidash-frontend/node_modules/
+omnidash-frontend/.next/
+out/
+.env.local
+.env.production
+dist/
+*.log
+.DS_Store

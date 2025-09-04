@@ -51,17 +51,17 @@ const Select = ({
 }) => (
   <div className="space-y-2">
     {label && (
-      <label className="block text-sm font-medium text-gray-700">
+      <label className="block text-sm font-medium text-pilot-dark-200 font-sans">
         {label}
       </label>
     )}
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className={`w-full bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl px-4 py-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-nature-forest-400 focus:border-transparent transition-all duration-300 ${className}`}
+      className={`w-full bg-pilot-dark-700/30 backdrop-blur-sm border border-pilot-dark-600 rounded-organic-md px-4 py-3 text-pilot-dark-200 focus:outline-none focus:ring-2 focus:ring-pilot-purple-400 focus:border-pilot-purple-400 transition-all duration-300 font-sans ${className}`}
     >
       {options.map((option) => (
-        <option key={option.value} value={option.value}>
+        <option key={option.value} value={option.value} className="bg-pilot-dark-800">
           {option.label}
         </option>
       ))}
@@ -89,15 +89,15 @@ const MetricCard = ({
   };
 
   return (
-    <div className="bg-white/20 backdrop-blur-xl border border-white/30 rounded-3xl p-6 hover:bg-white/30 transition-all duration-300">
+    <div className="bg-pilot-dark-700/20 backdrop-blur-xl border border-pilot-dark-600 rounded-organic-xl p-6 hover:shadow-organic-lg transition-all duration-300 transform hover:scale-[1.02] shadow-organic-md">
       <div className="flex items-start justify-between mb-4">
-        <div className="w-12 h-12 bg-gradient-to-br from-nature-forest-500 to-nature-emerald-500 rounded-2xl flex items-center justify-center text-white">
+        <div className="w-12 h-12 bg-gradient-to-br from-pilot-purple-500 to-pilot-blue-500 rounded-organic-md flex items-center justify-center text-white shadow-organic-sm">
           {icon}
         </div>
-        <div className={`flex items-center space-x-1 text-sm font-medium ${
-          trend === 'up' ? 'text-green-600' : 
-          trend === 'down' ? 'text-red-600' : 
-          'text-gray-600'
+        <div className={`flex items-center space-x-1 text-sm font-medium font-sans ${
+          trend === 'up' ? 'text-pilot-accent-emerald' : 
+          trend === 'down' ? 'text-pilot-accent-red' : 
+          'text-pilot-dark-300'
         }`}>
           {trend === 'up' && (
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -113,10 +113,10 @@ const MetricCard = ({
         </div>
       </div>
       <div>
-        <div className="text-3xl font-bold text-gray-800 mb-1">
+        <div className="text-3xl font-bold text-pilot-dark-100 mb-1 font-sans">
           {formatNumber(value)}
         </div>
-        <div className="text-gray-600 text-sm">{title}</div>
+        <div className="text-pilot-dark-300 text-sm font-sans">{title}</div>
       </div>
     </div>
   );
@@ -152,8 +152,8 @@ const SimpleChart = ({
   ).join(' ');
 
   return (
-    <div className="bg-white/20 backdrop-blur-xl border border-white/30 rounded-3xl p-6">
-      <h3 className="text-xl font-bold text-gray-800 mb-6">{title}</h3>
+    <div className="bg-pilot-dark-700/20 backdrop-blur-xl border border-pilot-dark-600 rounded-organic-xl p-6 shadow-organic-md hover:shadow-organic-lg transition-all duration-300">
+      <h3 className="text-xl font-bold text-pilot-dark-100 mb-6 font-sans">{title}</h3>
       <div className="relative" style={{ height }}>
         <svg 
           width="100%" 
@@ -163,8 +163,8 @@ const SimpleChart = ({
         >
           <defs>
             <linearGradient id="gradient" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#4A7B2A" stopOpacity={0.3} />
-              <stop offset="100%" stopColor="#4A7B2A" stopOpacity={0.05} />
+              <stop offset="0%" stopColor="#7C3AED" stopOpacity={0.3} />
+              <stop offset="100%" stopColor="#3B82F6" stopOpacity={0.05} />
             </linearGradient>
           </defs>
           
@@ -175,7 +175,7 @@ const SimpleChart = ({
           
           <path
             d={pathData}
-            stroke="#4A7B2A"
+            stroke="#7C3AED"
             strokeWidth="3"
             fill="none"
             strokeLinecap="round"
@@ -188,7 +188,7 @@ const SimpleChart = ({
               cx={point.x}
               cy={point.y}
               r={hoveredIndex === index ? 6 : 4}
-              fill="#2D8B5F"
+              fill="#8B5CF6"
               stroke="white"
               strokeWidth="2"
               className="cursor-pointer transition-all duration-200"
@@ -221,7 +221,7 @@ const SimpleChart = ({
           )}
         </svg>
         
-        <div className="flex justify-between mt-4 text-sm text-gray-600">
+        <div className="flex justify-between mt-4 text-sm text-pilot-dark-400 font-sans">
           {data.labels.map((label, index) => (
             <span key={index}>{label}</span>
           ))}
@@ -242,26 +242,26 @@ const PlatformMetrics = ({
     color: string;
   }>;
 }) => (
-  <div className="bg-white/20 backdrop-blur-xl border border-white/30 rounded-3xl p-6">
-    <h3 className="text-xl font-bold text-gray-800 mb-6">Platform Performance</h3>
+  <div className="bg-pilot-dark-700/20 backdrop-blur-xl border border-pilot-dark-600 rounded-organic-xl p-6 shadow-organic-md hover:shadow-organic-lg transition-all duration-300">
+    <h3 className="text-xl font-bold text-pilot-dark-100 mb-6 font-sans">Platform Performance</h3>
     <div className="space-y-4">
       {platforms.map((platform, index) => (
-        <div key={index} className="flex items-center justify-between p-4 bg-white/10 rounded-2xl">
+        <div key={index} className="flex items-center justify-between p-4 bg-pilot-dark-700/30 backdrop-blur-sm border border-pilot-dark-600 rounded-organic-lg hover:bg-pilot-dark-600/30 transition-all duration-300">
           <div className="flex items-center space-x-4">
             <div 
-              className="w-10 h-10 rounded-2xl flex items-center justify-center text-white font-bold"
+              className="w-10 h-10 rounded-organic-md flex items-center justify-center text-white font-bold shadow-organic-sm"
               style={{ backgroundColor: platform.color }}
             >
               {platform.name.charAt(0)}
             </div>
             <div>
-              <div className="font-semibold text-gray-800">{platform.name}</div>
-              <div className="text-sm text-gray-600">{platform.posts} posts</div>
+              <div className="font-semibold text-pilot-dark-100 font-sans">{platform.name}</div>
+              <div className="text-sm text-pilot-dark-400 font-sans">{platform.posts} posts</div>
             </div>
           </div>
           <div className="text-right">
-            <div className="font-semibold text-gray-800">{platform.followers.toLocaleString()}</div>
-            <div className="text-sm text-gray-600">{platform.engagement}% engagement</div>
+            <div className="font-semibold text-pilot-dark-100 font-sans">{platform.followers.toLocaleString()}</div>
+            <div className="text-sm text-pilot-dark-400 font-sans">{platform.engagement}% engagement</div>
           </div>
         </div>
       ))}
@@ -283,33 +283,48 @@ const TopPosts = ({
     date: string;
   }>;
 }) => (
-  <div className="bg-white/20 backdrop-blur-xl border border-white/30 rounded-3xl p-6">
-    <h3 className="text-xl font-bold text-gray-800 mb-6">Top Performing Posts</h3>
+  <div className="bg-pilot-dark-700/20 backdrop-blur-xl border border-pilot-dark-600 rounded-organic-xl p-6 shadow-organic-md hover:shadow-organic-lg transition-all duration-300">
+    <h3 className="text-xl font-bold text-pilot-dark-100 mb-6 font-sans">Top Performing Posts</h3>
     <div className="space-y-4">
       {posts.map((post, index) => (
-        <div key={post.id} className="p-4 bg-white/10 rounded-2xl">
+        <div key={post.id} className="p-4 bg-pilot-dark-700/30 backdrop-blur-sm border border-pilot-dark-600 rounded-organic-lg hover:bg-pilot-dark-600/30 transition-all duration-300">
           <div className="flex items-start justify-between mb-3">
             <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-gradient-to-br from-nature-forest-500 to-nature-emerald-500 rounded-lg flex items-center justify-center text-white text-sm font-bold">
+              <div className="w-8 h-8 bg-gradient-to-br from-pilot-purple-500 to-pilot-blue-500 rounded-organic-sm flex items-center justify-center text-white text-sm font-bold shadow-organic-sm">
                 {index + 1}
               </div>
               <div>
-                <div className="font-medium text-gray-800 capitalize">{post.platform}</div>
-                <div className="text-xs text-gray-500">
+                <div className="font-medium text-pilot-dark-100 capitalize font-sans">{post.platform}</div>
+                <div className="text-xs text-pilot-dark-400 font-sans">
                   {new Date(post.date).toLocaleDateString()}
                 </div>
               </div>
             </div>
             <div className="text-right">
-              <div className="font-semibold text-nature-forest-600">{post.engagement}%</div>
-              <div className="text-xs text-gray-500">engagement</div>
+              <div className="font-semibold text-pilot-purple-400 font-sans">{post.engagement}%</div>
+              <div className="text-xs text-pilot-dark-400 font-sans">engagement</div>
             </div>
           </div>
-          <p className="text-gray-700 text-sm mb-3 line-clamp-2">{post.content}</p>
-          <div className="flex space-x-4 text-xs text-gray-500">
-            <span>❤️ {post.likes.toLocaleString()}</span>
-            <span>💬 {post.comments}</span>
-            <span>🔄 {post.shares}</span>
+          <p className="text-pilot-dark-200 text-sm mb-3 line-clamp-2 font-sans">{post.content}</p>
+          <div className="flex space-x-4 text-xs text-pilot-dark-400 font-sans">
+            <span className="flex items-center">
+              <svg className="w-3 h-3 mr-1 text-pilot-accent-red" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
+              </svg>
+              {post.likes.toLocaleString()}
+            </span>
+            <span className="flex items-center">
+              <svg className="w-3 h-3 mr-1 text-pilot-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+              </svg>
+              {post.comments}
+            </span>
+            <span className="flex items-center">
+              <svg className="w-3 h-3 mr-1 text-pilot-accent-emerald" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
+              </svg>
+              {post.shares}
+            </span>
           </div>
         </div>
       ))}
@@ -328,8 +343,8 @@ const GrowthChart = ({
   const chartHeight = 250;
   
   return (
-    <div className="bg-white/20 backdrop-blur-xl border border-white/30 rounded-3xl p-6">
-      <h3 className="text-xl font-bold text-gray-800 mb-6">{title}</h3>
+    <div className="bg-pilot-dark-700/20 backdrop-blur-xl border border-pilot-dark-600 rounded-organic-xl p-6 shadow-organic-md hover:shadow-organic-lg transition-all duration-300">
+      <h3 className="text-xl font-bold text-pilot-dark-100 mb-6 font-sans">{title}</h3>
       <div className="relative" style={{ height: chartHeight }}>
         <svg width="100%" height="100%" viewBox={`0 0 100 ${chartHeight}`}>
           <defs>
@@ -377,7 +392,7 @@ const GrowthChart = ({
           })}
         </svg>
         
-        <div className="flex justify-between mt-4 text-sm text-gray-600">
+        <div className="flex justify-between mt-4 text-sm text-pilot-dark-400 font-sans">
           {data.labels.map((label, index) => (
             <span key={index}>{label}</span>
           ))}
@@ -391,7 +406,7 @@ const GrowthChart = ({
               className="w-3 h-3 rounded-full"
               style={{ backgroundColor: dataset.borderColor }}
             ></div>
-            <span className="text-sm text-gray-600">{dataset.label}</span>
+            <span className="text-sm text-pilot-dark-400 font-sans">{dataset.label}</span>
           </div>
         ))}
       </div>
@@ -443,8 +458,8 @@ export default function AnalyticsPage() {
     datasets: [{
       label: 'Engagement',
       data: [2800, 3200, 2900, 3800, 4100, 3600, 3900],
-      borderColor: '#4A7B2A',
-      backgroundColor: 'rgba(74, 123, 42, 0.1)',
+      borderColor: '#7C3AED',
+      backgroundColor: 'rgba(124, 58, 237, 0.1)',
       tension: 0.4
     }]
   };
@@ -455,15 +470,15 @@ export default function AnalyticsPage() {
       {
         label: 'Followers',
         data: [11800, 12000, 12200, 12400],
-        borderColor: '#2D8B5F',
-        backgroundColor: 'rgba(45, 139, 95, 0.1)',
+        borderColor: '#8B5CF6',
+        backgroundColor: 'rgba(139, 92, 246, 0.1)',
         tension: 0.4
       },
       {
         label: 'Reach',
         data: [140000, 145000, 152000, 156000],
-        borderColor: '#8FAE83',
-        backgroundColor: 'rgba(143, 174, 131, 0.1)',
+        borderColor: '#3B82F6',
+        backgroundColor: 'rgba(59, 130, 246, 0.1)',
         tension: 0.4
       }
     ]
@@ -525,104 +540,132 @@ export default function AnalyticsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-nature-forest-50 to-nature-emerald-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-nature-forest-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading analytics...</p>
+      <div className="min-h-screen bg-pilot-dark-900 relative overflow-hidden flex items-center justify-center">
+        {/* 3D Gradient Background */}
+        <div className="absolute inset-0">
+          <div className="absolute inset-0 bg-gradient-to-br from-pilot-purple-900/20 via-pilot-dark-800 to-pilot-blue-900/20"></div>
+          <div className="absolute inset-0 bg-gradient-to-tr from-pilot-purple-600/10 via-transparent to-pilot-blue-500/10"></div>
+          <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-gradient-to-r from-pilot-purple-500/10 to-pilot-blue-500/10 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-1/3 left-1/3 w-80 h-80 bg-gradient-to-r from-pilot-blue-500/10 to-pilot-purple-500/10 rounded-full blur-3xl"></div>
+          <div className="absolute inset-0 opacity-[0.02]">
+            <div className="w-full h-full bg-[radial-gradient(circle_at_center,#7C3AED_2px,transparent_2px)] bg-[length:60px_60px]"></div>
+          </div>
+        </div>
+        
+        <div className="relative z-10 text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pilot-purple-500 mx-auto mb-4"></div>
+          <p className="text-pilot-dark-200 font-sans">Loading analytics...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-nature-forest-50 to-nature-emerald-50 p-6">
-      <div className="max-w-7xl mx-auto">
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h1 className="text-4xl font-bold text-gray-800 mb-2">Analytics Dashboard</h1>
-              <p className="text-gray-600">Track your social media performance and growth</p>
-            </div>
-            
-            <div className="flex space-x-4">
-              <Select
-                value={selectedBrand}
-                onChange={setSelectedBrand}
-                options={brandOptions}
-                className="min-w-[160px]"
-              />
-              <Select
-                value={selectedPeriod}
-                onChange={setSelectedPeriod}
-                options={periodOptions}
-                className="min-w-[140px]"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <MetricCard
-              title="Total Engagement"
-              value={analytics.engagement.total}
-              change={analytics.engagement.change}
-              trend={analytics.engagement.trend}
-              icon={
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                </svg>
-              }
-            />
-            
-            <MetricCard
-              title="Total Reach"
-              value={analytics.reach.total}
-              change={analytics.reach.change}
-              trend={analytics.reach.trend}
-              icon={
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                </svg>
-              }
-            />
-            
-            <MetricCard
-              title="Total Followers"
-              value={analytics.followers.total}
-              change={analytics.followers.change}
-              trend={analytics.followers.trend}
-              icon={
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-              }
-            />
-            
-            <MetricCard
-              title="Posts Published"
-              value={analytics.posts.total}
-              change={analytics.posts.change}
-              trend={analytics.posts.trend}
-              icon={
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                </svg>
-              }
-            />
-          </div>
+    <div className="min-h-screen bg-pilot-dark-900 relative overflow-hidden">
+      {/* 3D Gradient Background */}
+      <div className="absolute inset-0">
+        <div className="absolute inset-0 bg-gradient-to-br from-pilot-purple-900/20 via-pilot-dark-800 to-pilot-blue-900/20"></div>
+        <div className="absolute inset-0 bg-gradient-to-tr from-pilot-purple-600/10 via-transparent to-pilot-blue-500/10"></div>
+        <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-gradient-to-r from-pilot-purple-500/10 to-pilot-blue-500/10 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-1/3 left-1/3 w-80 h-80 bg-gradient-to-r from-pilot-blue-500/10 to-pilot-purple-500/10 rounded-full blur-3xl"></div>
+        <div className="absolute inset-0 opacity-[0.02]">
+          <div className="w-full h-full bg-[radial-gradient(circle_at_center,#7C3AED_2px,transparent_2px)] bg-[length:60px_60px]"></div>
         </div>
+      </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-          <SimpleChart data={engagementData} title="Daily Engagement" />
-          <GrowthChart data={growthData} title="Growth Trends" />
-        </div>
+      <div className="relative z-10 p-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="mb-8">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h1 className="text-4xl md:text-5xl font-bold text-pilot-dark-100 font-sans mb-2">
+                  <span className="bg-gradient-to-r from-pilot-purple-400 to-pilot-blue-400 bg-clip-text text-transparent">
+                    Analytics Dashboard
+                  </span>
+                </h1>
+                <p className="text-pilot-dark-400 text-xl font-sans">Track your social media performance and growth</p>
+              </div>
+              
+              <div className="flex space-x-4">
+                <Select
+                  value={selectedBrand}
+                  onChange={setSelectedBrand}
+                  options={brandOptions}
+                  className="min-w-[160px]"
+                />
+                <Select
+                  value={selectedPeriod}
+                  onChange={setSelectedPeriod}
+                  options={periodOptions}
+                  className="min-w-[140px]"
+                />
+              </div>
+            </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-1">
-            <PlatformMetrics platforms={platformData} />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              <MetricCard
+                title="Total Engagement"
+                value={analytics.engagement.total}
+                change={analytics.engagement.change}
+                trend={analytics.engagement.trend}
+                icon={
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                  </svg>
+                }
+              />
+              
+              <MetricCard
+                title="Total Reach"
+                value={analytics.reach.total}
+                change={analytics.reach.change}
+                trend={analytics.reach.trend}
+                icon={
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                }
+              />
+              
+              <MetricCard
+                title="Total Followers"
+                value={analytics.followers.total}
+                change={analytics.followers.change}
+                trend={analytics.followers.trend}
+                icon={
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                }
+              />
+              
+              <MetricCard
+                title="Posts Published"
+                value={analytics.posts.total}
+                change={analytics.posts.change}
+                trend={analytics.posts.trend}
+                icon={
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                }
+              />
+            </div>
           </div>
-          <div className="lg:col-span-2">
-            <TopPosts posts={topPosts} />
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            <SimpleChart data={engagementData} title="Daily Engagement" />
+            <GrowthChart data={growthData} title="Growth Trends" />
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-1">
+              <PlatformMetrics platforms={platformData} />
+            </div>
+            <div className="lg:col-span-2">
+              <TopPosts posts={topPosts} />
+            </div>
           </div>
         </div>
       </div>

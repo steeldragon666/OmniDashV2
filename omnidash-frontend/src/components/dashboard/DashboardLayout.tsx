@@ -288,7 +288,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                   Good morning, {user?.name || 'User'}
                 </h1>
                 <p className="text-sm text-neutral-600">
-                  Here's what's happening with your brands today
+                  Here&apos;s what&apos;s happening with your brands today
                 </p>
               </div>
             </div>

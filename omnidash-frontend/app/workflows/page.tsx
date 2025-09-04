@@ -9,7 +9,7 @@ interface WorkflowNode {
   name: string;
   description: string;
   position: { x: number; y: number };
-  data: any;
+  data: Record<string, unknown>;
   connections: string[];
 }
 

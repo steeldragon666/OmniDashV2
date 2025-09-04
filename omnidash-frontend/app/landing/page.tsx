@@ -89,7 +89,7 @@ const LandingPage = () => {
 
           {/* Feature Pills */}
           <div className={`flex flex-wrap justify-center gap-4 mb-12 transform transition-all duration-2000 ease-out ${logoAnimated ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '1.5s' }}>
-            {['AI-Powered Analytics', 'Multi-Platform Sync', 'Professional Automation', 'Real-time Insights'].map((feature, index) => (
+            {['AI-Powered Analytics', 'Multi-Platform Sync', 'Professional Automation', 'Real-time Insights'].map((feature) => (
               <div key={feature} className="px-6 py-3 bg-pilot-dark-700/30 backdrop-blur-sm border border-pilot-dark-600 rounded-full text-pilot-dark-200 font-sans text-sm hover:bg-pilot-dark-600/40 transition-all duration-300 transform hover:scale-105">
                 {feature}
               </div>
@@ -112,7 +112,7 @@ const LandingPage = () => {
               Ready to Transform?
             </h2>
             <p className="text-pilot-dark-400 font-sans mb-8 leading-relaxed">
-              Join thousands of professionals who've revolutionized their social media strategy with OmniDash.
+              Join thousands of professionals who&apos;ve revolutionized their social media strategy with OmniDash.
             </p>
             
             <button 

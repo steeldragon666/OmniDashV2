@@ -224,12 +224,6 @@ export default function BusinessRegistryPage() {
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      handleSearch();
-    }
-  };
-
   return (
     <div className="min-h-screen bg-pilot-dark-900 relative overflow-hidden">
       {/* 3D Gradient Background */}
@@ -304,7 +298,7 @@ export default function BusinessRegistryPage() {
           {searchCount > 0 && (
             <div className="mb-6">
               <p className="text-pilot-dark-300 font-sans">
-                Found <span className="text-pilot-purple-400 font-semibold">{searchCount}</span> results for "{searchTerm}"
+                Found <span className="text-pilot-purple-400 font-semibold">{searchCount}</span> results for &quot;{searchTerm}&quot;
               </p>
             </div>
           )}

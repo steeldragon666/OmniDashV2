@@ -558,23 +558,40 @@ export default function BrandsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-nature-forest-50 to-nature-emerald-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-nature-forest-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading brands...</p>
+      <div className="min-h-screen bg-pilot-dark-900 flex items-center justify-center">
+        <div className="absolute inset-0 bg-gradient-to-br from-pilot-purple-900/20 via-pilot-dark-900 to-pilot-blue-900/20"></div>
+        <div className="text-center relative z-10">
+          <div className="animate-spin rounded-full h-16 w-16 border-4 border-pilot-purple-500/20 border-t-pilot-purple-400 mx-auto mb-6"></div>
+          <p className="text-pilot-dark-300 font-sans text-lg">Loading brands...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-nature-forest-50 to-nature-emerald-50 p-6">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-pilot-dark-900 relative overflow-hidden">
+      {/* 3D Gradient Background */}
+      <div className="absolute inset-0">
+        <div className="absolute inset-0 bg-gradient-to-br from-pilot-purple-900/20 via-pilot-dark-800 to-pilot-blue-900/20"></div>
+        <div className="absolute inset-0 bg-gradient-to-tr from-pilot-purple-600/10 via-transparent to-pilot-blue-500/10"></div>
+        <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-gradient-to-r from-pilot-purple-500/10 to-pilot-blue-500/10 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-1/3 left-1/3 w-80 h-80 bg-gradient-to-r from-pilot-blue-500/10 to-pilot-purple-500/10 rounded-full blur-3xl"></div>
+        <div className="absolute inset-0 opacity-[0.02]">
+          <div className="w-full h-full bg-[radial-gradient(circle_at_center,#7C3AED_2px,transparent_2px)] bg-[length:60px_60px]"></div>
+        </div>
+      </div>
+
+      <div className="relative z-10 p-6">
+        <div className="max-w-6xl mx-auto">
         <div className="mb-8">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h1 className="text-4xl font-bold text-gray-800 mb-2">Brand Management</h1>
-              <p className="text-gray-600">Manage your brands and their social media presence</p>
+              <h1 className="text-4xl md:text-5xl font-bold text-pilot-dark-100 font-sans mb-4">
+                <span className="bg-gradient-to-r from-pilot-purple-400 to-pilot-blue-400 bg-clip-text text-transparent">
+                  Brand Management
+                </span>
+              </h1>
+              <p className="text-pilot-dark-400 text-xl font-sans">Manage your brands and their social media presence</p>
             </div>
             <Button variant="primary" onClick={handleCreateBrand}>
               <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -584,7 +601,7 @@ export default function BrandsPage() {
             </Button>
           </div>
 
-          <div className="bg-white/20 backdrop-blur-xl border border-white/30 rounded-3xl p-6 mb-8">
+          <div className="bg-pilot-dark-700/20 backdrop-blur-xl border border-pilot-dark-600 rounded-organic-xl p-8 shadow-organic-lg mb-8">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="md:col-span-2">
                 <Input
@@ -657,6 +674,7 @@ export default function BrandsPage() {
           }}
           onSave={handleSaveBrand}
         />
+        </div>
       </div>
     </div>
   );

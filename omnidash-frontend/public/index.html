@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OmniDash - The Future of Multi-Brand Social Media Management</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        
+        .gradient-x {
+            background-size: 300% 300%;
+            animation: gradient-x 3s ease infinite;
+        }
+        
+        @keyframes gradient-x {
+            0%, 100% { background-position: left center; }
+            50% { background-position: right center; }
+        }
+        
+        .animate-pulse-slow {
+            animation: pulse-slow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        
+        @keyframes pulse-slow {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .scale-animation {
+            animation: scaleUp 2s ease-out forwards;
+        }
+        
+        @keyframes scaleUp {
+            from { transform: scale(0.5) translateY(64px); opacity: 0; }
+            to { transform: scale(1) translateY(0); opacity: 1; }
+        }
+        
+        .text-animation {
+            animation: slideIn 2s ease-out 0.5s both;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateY(32px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        .login-wall {
+            animation: fadeInUp 1s ease-out 4s both;
+        }
+        
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: scale(0.95) translateY(32px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        
+        .rounded-organic-xl { border-radius: 16px 32px 16px 32px; }
+        .rounded-organic-md { border-radius: 8px 16px 8px 16px; }
+    </style>
+</head>
+<body class="bg-gray-900 overflow-hidden">
+    <!-- 3D Gradient Background -->
+    <div class="min-h-screen relative overflow-hidden" style="background: linear-gradient(135deg, #1e1b4b 0%, #1a1a1a 50%, #0c1631 100%);">
+        <!-- Gradient layers -->
+        <div class="absolute inset-0" style="background: linear-gradient(45deg, rgba(124, 58, 237, 0.2) 0%, transparent 50%, rgba(59, 130, 246, 0.2) 100%);"></div>
+        
+        <!-- Animated orbs -->
+        <div class="absolute top-1/4 left-1/4 w-96 h-96 rounded-full blur-3xl animate-pulse-slow" style="background: linear-gradient(to right, rgba(124, 58, 237, 0.2), rgba(59, 130, 246, 0.2));"></div>
+        <div class="absolute bottom-1/4 right-1/4 w-80 h-80 rounded-full blur-3xl animate-pulse-slow" style="background: linear-gradient(to right, rgba(59, 130, 246, 0.2), rgba(124, 58, 237, 0.2)); animation-delay: 1s;"></div>
+        
+        <!-- Dot pattern -->
+        <div class="absolute inset-0 opacity-5">
+            <div class="w-full h-full" style="background: radial-gradient(circle at center, #7C3AED 2px, transparent 2px); background-size: 60px 60px;"></div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="relative z-10 min-h-screen flex items-center justify-center px-4">
+            <div class="text-center max-w-4xl mx-auto">
+                
+                <!-- Animated Logo -->
+                <div class="mb-8 scale-animation">
+                    <div class="relative inline-block">
+                        <!-- Logo Glow -->
+                        <div class="absolute inset-0 blur-xl rounded-full opacity-60 animate-pulse-slow" style="background: linear-gradient(to right, rgb(139, 92, 246), rgb(96, 165, 250));"></div>
+                        
+                        <!-- Main Logo -->
+                        <div class="relative rounded-organic-xl p-8 shadow-2xl" style="background: linear-gradient(135deg, rgb(124, 58, 237), rgb(59, 130, 246));">
+                            <svg class="w-24 h-24 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.94-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Animated Title -->
+                <div class="mb-6 text-animation">
+                    <h1 class="text-6xl md:text-8xl font-bold mb-4">
+                        <span class="gradient-x bg-clip-text text-transparent" style="background: linear-gradient(to right, rgb(196, 181, 253), rgb(147, 197, 253), rgb(196, 181, 253));">
+                            OmniDash
+                        </span>
+                    </h1>
+                    <p class="text-xl md:text-2xl text-gray-400 leading-relaxed">
+                        The Future of Multi-Brand Social Media Management
+                    </p>
+                </div>
+
+                <!-- Subtitle -->
+                <div class="mb-12 text-animation" style="animation-delay: 1s;">
+                    <p class="text-lg text-gray-500 max-w-2xl mx-auto">
+                        Harness the power of AI-driven analytics, seamless integrations, and professional automation 
+                        to transform your digital presence across all platforms.
+                    </p>
+                </div>
+
+                <!-- Feature Pills -->
+                <div class="flex flex-wrap justify-center gap-4 mb-12 text-animation" style="animation-delay: 1.5s;">
+                    <div class="px-6 py-3 bg-gray-800 bg-opacity-30 backdrop-blur-sm border border-gray-700 rounded-full text-gray-300 text-sm hover:bg-gray-700 hover:bg-opacity-40 transition-all duration-300 transform hover:scale-105">
+                        AI-Powered Analytics
+                    </div>
+                    <div class="px-6 py-3 bg-gray-800 bg-opacity-30 backdrop-blur-sm border border-gray-700 rounded-full text-gray-300 text-sm hover:bg-gray-700 hover:bg-opacity-40 transition-all duration-300 transform hover:scale-105">
+                        Multi-Platform Sync
+                    </div>
+                    <div class="px-6 py-3 bg-gray-800 bg-opacity-30 backdrop-blur-sm border border-gray-700 rounded-full text-gray-300 text-sm hover:bg-gray-700 hover:bg-opacity-40 transition-all duration-300 transform hover:scale-105">
+                        Professional Automation
+                    </div>
+                    <div class="px-6 py-3 bg-gray-800 bg-opacity-30 backdrop-blur-sm border border-gray-700 rounded-full text-gray-300 text-sm hover:bg-gray-700 hover:bg-opacity-40 transition-all duration-300 transform hover:scale-105">
+                        Real-time Insights
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Login Wall Overlay -->
+        <div class="fixed inset-0 z-50 bg-gray-900 bg-opacity-95 backdrop-blur-xl flex items-center justify-center login-wall">
+            <div class="bg-gray-800 bg-opacity-50 backdrop-blur-sm border border-gray-700 rounded-organic-xl p-12 max-w-md w-full mx-4 shadow-2xl">
+                <div class="text-center">
+                    <div class="w-16 h-16 rounded-organic-md mx-auto mb-6 flex items-center justify-center shadow-lg" style="background: linear-gradient(135deg, rgb(124, 58, 237), rgb(59, 130, 246));">
+                        <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.94-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+                        </svg>
+                    </div>
+                    
+                    <h2 class="text-3xl font-bold text-gray-100 mb-4">
+                        Ready to Transform?
+                    </h2>
+                    <p class="text-gray-400 mb-8 leading-relaxed">
+                        Join thousands of professionals who've revolutionized their social media strategy with OmniDash.
+                    </p>
+                    
+                    <button 
+                        onclick="window.location.href='#'"
+                        class="w-full py-4 px-8 text-white font-bold rounded-organic-md shadow-2xl hover:shadow-purple-500/25 transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-purple-500 focus:ring-opacity-50"
+                        style="background: linear-gradient(to right, rgb(124, 58, 237), rgb(59, 130, 246));"
+                    >
+                        Get Started Free
+                    </button>
+                    
+                    <p class="text-gray-500 text-sm mt-4">
+                        No credit card required • Start in 30 seconds
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

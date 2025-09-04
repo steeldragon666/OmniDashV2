@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { signIn, getSession } from 'next-auth/react';
 import { useAuth } from '@/app/components/AuthProvider';
 
-// Professional Input Component
+// Pilot Pen Design System Input Component
 const Input = ({ 
   type = 'text', 
   placeholder, 
@@ -24,7 +24,7 @@ const Input = ({
   className?: string;
 }) => (
   <div className="space-y-2">
-    <label className="block text-sm font-medium text-gray-700">
+    <label className="block text-sm font-medium text-pilot-dark-200 font-sans">
       {label}
     </label>
     <input
@@ -34,16 +34,17 @@ const Input = ({
       onChange={onChange}
       className={`
         w-full px-4 py-3 
-        bg-white border border-gray-300 rounded-lg
-        text-gray-900 placeholder-gray-500
-        focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
-        transition-all duration-200
-        ${error ? 'border-red-300 ring-red-100 focus:ring-red-500 focus:border-red-500' : ''}
+        bg-pilot-dark-700/30 backdrop-blur-sm 
+        border border-pilot-dark-600 rounded-organic-md
+        text-pilot-dark-100 placeholder-pilot-dark-400 font-sans
+        focus:outline-none focus:ring-2 focus:ring-pilot-purple-400 focus:border-pilot-purple-400
+        transition-all duration-300
+        ${error ? 'border-pilot-accent-red/50 ring-pilot-accent-red/20 focus:ring-pilot-accent-red focus:border-pilot-accent-red' : ''}
         ${className}
       `}
     />
     {error && (
-      <p className="flex items-center text-sm text-red-600">
+      <p className="flex items-center text-sm text-pilot-accent-red font-sans">
         <svg className="flex-shrink-0 w-4 h-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
           <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
         </svg>
@@ -53,7 +54,7 @@ const Input = ({
   </div>
 );
 
-// Professional Button Component
+// Pilot Pen Design System Button Component
 const Button = ({ 
   children, 
   variant = 'primary', 
@@ -70,15 +71,15 @@ const Button = ({
   className?: string;
 }) => {
   const variants = {
-    primary: 'bg-blue-600 text-white shadow-sm hover:bg-blue-700 focus:ring-blue-500',
-    secondary: 'bg-gray-600 text-white shadow-sm hover:bg-gray-700 focus:ring-gray-500',
-    outline: 'bg-white text-gray-700 border border-gray-300 shadow-sm hover:bg-gray-50 focus:ring-blue-500'
+    primary: 'bg-gradient-to-r from-pilot-purple-500 to-pilot-blue-500 hover:shadow-organic-lg text-white shadow-organic-sm focus:ring-pilot-purple-400 transform hover:scale-[1.02]',
+    secondary: 'bg-pilot-dark-700/50 border border-pilot-dark-600 hover:bg-pilot-dark-600/50 text-pilot-dark-100 shadow-organic-sm focus:ring-pilot-dark-400 transform hover:scale-[1.02]',
+    outline: 'border border-pilot-dark-500 text-pilot-dark-300 hover:bg-pilot-dark-600/30 focus:ring-pilot-purple-400 backdrop-blur-sm transform hover:scale-[1.02]'
   };
   
   const sizes = {
-    sm: 'px-3 py-2 text-sm',
-    md: 'px-4 py-2.5 text-sm',
-    lg: 'px-6 py-3 text-base'
+    sm: 'px-4 py-2 text-sm',
+    md: 'px-6 py-3 text-base',
+    lg: 'px-8 py-4 text-lg'
   };
 
   return (
@@ -87,18 +88,15 @@ const Button = ({
       disabled={loading}
       className={`
         ${variants[variant]} ${sizes[size]}
-        font-medium rounded-lg transition-all duration-200
-        focus:outline-none focus:ring-2 focus:ring-offset-2
+        font-medium font-sans rounded-organic-md transition-all duration-300
+        focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-pilot-dark-900
         disabled:opacity-50 disabled:cursor-not-allowed
         flex items-center justify-center gap-2
         ${className}
       `}
     >
       {loading && (
-        <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24">
-          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-        </svg>
+        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
       )}
       {children}
     </button>
@@ -188,43 +186,45 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-neutral-50 flex items-center justify-center p-6 relative overflow-hidden">
-      {/* Professional grid background pattern */}
-      <div className="absolute inset-0 opacity-[0.02]">
-        <div className="w-full h-full bg-[radial-gradient(circle_at_center,#000_1px,transparent_1px)] bg-[length:24px_24px]"></div>
-      </div>
-      
-      {/* Subtle background accent */}
+    <div className="min-h-screen bg-pilot-dark-900 relative overflow-hidden flex items-center justify-center p-6">
+      {/* 3D Gradient Background */}
       <div className="absolute inset-0">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/[0.03] rounded-full blur-3xl"></div>
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/[0.03] rounded-full blur-3xl"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-pilot-purple-900/20 via-pilot-dark-800 to-pilot-blue-900/20"></div>
+        <div className="absolute inset-0 bg-gradient-to-tr from-pilot-purple-600/10 via-transparent to-pilot-blue-500/10"></div>
+        <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-gradient-to-r from-pilot-purple-500/10 to-pilot-blue-500/10 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-1/3 left-1/3 w-80 h-80 bg-gradient-to-r from-pilot-blue-500/10 to-pilot-purple-500/10 rounded-full blur-3xl"></div>
+        <div className="absolute inset-0 opacity-[0.02]">
+          <div className="w-full h-full bg-[radial-gradient(circle_at_center,#7C3AED_2px,transparent_2px)] bg-[length:60px_60px]"></div>
+        </div>
       </div>
 
-      <div className="relative w-full max-w-md">
+      <div className="relative z-10 w-full max-w-md">
         {/* Logo and Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-xl shadow-sm mb-6 ring-1 ring-black/5">
-            <svg className="w-8 h-8 text-white" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-pilot-purple-500 to-pilot-blue-500 rounded-organic-xl shadow-organic-md mb-6 transform hover:scale-105 transition-all duration-300">
+            <svg className="w-8 h-8 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
-          <h1 className="text-2xl font-semibold text-gray-900 mb-2 tracking-tight">
-            Sign in to OmniDash
+          <h1 className="text-3xl font-bold text-pilot-dark-100 mb-2 font-sans">
+            <span className="bg-gradient-to-r from-pilot-purple-400 to-pilot-blue-400 bg-clip-text text-transparent">
+              Sign in to OmniDash
+            </span>
           </h1>
-          <p className="text-sm text-gray-600">
+          <p className="text-pilot-dark-400 text-lg font-sans">
             Access your multi-brand social media dashboard
           </p>
         </div>
 
         {/* Login Card */}
-        <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-8 ring-1 ring-black/5">
+        <div className="bg-pilot-dark-700/20 backdrop-blur-xl border border-pilot-dark-600 rounded-organic-xl p-8 shadow-organic-lg hover:shadow-organic-lg transition-all duration-300">
           {errors.general && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <div className="mb-6 p-4 bg-pilot-accent-red/10 border border-pilot-accent-red/30 rounded-organic-md backdrop-blur-sm">
               <div className="flex">
-                <svg className="flex-shrink-0 w-5 h-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                <svg className="flex-shrink-0 w-5 h-5 text-pilot-accent-red" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                 </svg>
-                <p className="ml-3 text-sm text-red-800">{errors.general}</p>
+                <p className="ml-3 text-sm text-pilot-accent-red font-sans">{errors.general}</p>
               </div>
             </div>
           )}
@@ -252,14 +252,14 @@ export default function LoginPage() {
               <label className="flex items-center">
                 <input 
                   type="checkbox" 
-                  className="w-4 h-4 text-blue-600 bg-white border-gray-300 rounded focus:ring-blue-500"
+                  className="w-4 h-4 text-pilot-purple-500 bg-pilot-dark-700/30 border-pilot-dark-600 rounded focus:ring-pilot-purple-400"
                 />
-                <span className="ml-2 text-sm text-gray-700">Remember me</span>
+                <span className="ml-2 text-sm text-pilot-dark-200 font-sans">Remember me</span>
               </label>
               
               <button 
                 type="button"
-                className="text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors"
+                className="text-sm text-pilot-purple-400 hover:text-pilot-purple-300 font-medium transition-colors font-sans"
               >
                 Forgot password?
               </button>
@@ -277,9 +277,9 @@ export default function LoginPage() {
 
           {/* Divider */}
           <div className="my-6 flex items-center">
-            <div className="flex-1 h-px bg-gray-200" />
-            <span className="px-4 text-sm text-gray-500">Or continue with</span>
-            <div className="flex-1 h-px bg-gray-200" />
+            <div className="flex-1 h-px bg-pilot-dark-600" />
+            <span className="px-4 text-sm text-pilot-dark-400 font-sans">Or continue with</span>
+            <div className="flex-1 h-px bg-pilot-dark-600" />
           </div>
 
           {/* Social Login */}
@@ -316,9 +316,9 @@ export default function LoginPage() {
 
         {/* Sign Up Link */}
         <div className="mt-6 text-center">
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-pilot-dark-400 font-sans">
             Don't have an account?{' '}
-            <button className="font-medium text-blue-600 hover:text-blue-700 transition-colors">
+            <button className="font-medium text-pilot-purple-400 hover:text-pilot-purple-300 transition-colors font-sans">
               Create account
             </button>
           </p>
@@ -326,11 +326,11 @@ export default function LoginPage() {
 
         {/* Security Notice */}
         <div className="mt-8 text-center">
-          <div className="inline-flex items-center px-3 py-1 bg-blue-50 border border-blue-200 rounded-full">
-            <svg className="w-4 h-4 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="inline-flex items-center px-4 py-2 bg-pilot-dark-700/30 border border-pilot-dark-600 rounded-organic-sm backdrop-blur-sm">
+            <svg className="w-4 h-4 text-pilot-purple-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
             </svg>
-            <span className="text-xs font-medium text-blue-800">Secured with enterprise-grade OAuth</span>
+            <span className="text-xs font-medium text-pilot-dark-200 font-sans">Secured with enterprise-grade OAuth</span>
           </div>
         </div>
       </div>

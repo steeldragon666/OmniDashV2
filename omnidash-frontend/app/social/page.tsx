@@ -91,7 +91,7 @@ const Textarea = ({
 }) => (
   <div className="space-y-2">
     {label && (
-      <label className="block text-sm font-medium text-gray-700">
+      <label className="block text-sm font-medium text-pilot-dark-200 font-sans">
         {label}
       </label>
     )}
@@ -278,33 +278,33 @@ const ScheduledPostCard = ({
 }) => {
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'scheduled': return 'bg-blue-100 text-blue-800';
-      case 'published': return 'bg-green-100 text-green-800';
-      case 'failed': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'scheduled': return 'bg-pilot-blue-400/20 text-pilot-blue-400';
+      case 'published': return 'bg-pilot-accent-emerald/20 text-pilot-accent-emerald';
+      case 'failed': return 'bg-pilot-accent-red/20 text-pilot-accent-red';
+      default: return 'bg-pilot-dark-600/50 text-pilot-dark-300';
     }
   };
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-200 group">
+    <div className="bg-pilot-dark-700/50 backdrop-blur-sm border border-pilot-dark-600 rounded-organic-lg p-6 shadow-organic-md hover:shadow-organic-lg transition-all duration-300 transform hover:scale-[1.02] group">
       <div className="flex items-start justify-between mb-4">
         <div className="flex-1">
           <div className="flex items-center space-x-2 mb-2">
             <div className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(post.status)}`}>
               {post.status.charAt(0).toUpperCase() + post.status.slice(1)}
             </div>
-            <span className="text-xs text-gray-500">
+            <span className="text-xs text-pilot-dark-400 font-sans">
               {new Date(post.scheduledTime).toLocaleString()}
             </span>
           </div>
-          <p className="text-gray-700 text-sm line-clamp-3">{post.content}</p>
+          <p className="text-pilot-dark-200 text-sm line-clamp-3 font-sans">{post.content}</p>
         </div>
         
         <div className="flex space-x-2 opacity-0 group-hover:opacity-100 transition-all duration-300 ml-4">
           {post.status === 'scheduled' && (
             <button
               onClick={() => onPublish(post.id)}
-              className="p-2 bg-green-100 hover:bg-green-200 text-green-600 rounded-xl transition-colors"
+              className="p-2 bg-pilot-accent-emerald/20 hover:bg-pilot-accent-emerald/30 text-pilot-accent-emerald rounded-organic-md transition-all duration-300"
               title="Publish now"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -314,7 +314,7 @@ const ScheduledPostCard = ({
           )}
           <button
             onClick={() => onEdit(post)}
-            className="p-2 bg-yellow-100 hover:bg-yellow-200 text-yellow-600 rounded-xl transition-colors"
+            className="p-2 bg-pilot-accent-orange/20 hover:bg-pilot-accent-orange/30 text-pilot-accent-orange rounded-organic-md transition-all duration-300"
             title="Edit"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -323,7 +323,7 @@ const ScheduledPostCard = ({
           </button>
           <button
             onClick={() => onDelete(post.id)}
-            className="p-2 bg-red-100 hover:bg-red-200 text-red-600 rounded-xl transition-colors"
+            className="p-2 bg-pilot-accent-red/20 hover:bg-pilot-accent-red/30 text-pilot-accent-red rounded-organic-md transition-all duration-300"
             title="Delete"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -335,7 +335,7 @@ const ScheduledPostCard = ({
       
       <div className="flex flex-wrap gap-2 mb-3">
         {post.platforms.map((platform, index) => (
-          <span key={index} className="px-2 py-1 bg-gray-100 text-gray-700 rounded-md text-xs capitalize">
+          <span key={index} className="px-2 py-1 bg-pilot-purple-500/20 text-pilot-purple-300 rounded-full text-xs capitalize border border-pilot-purple-500/30">
             {platform}
           </span>
         ))}
@@ -344,10 +344,10 @@ const ScheduledPostCard = ({
       {post.hashtags.length > 0 && (
         <div className="flex flex-wrap gap-1">
           {post.hashtags.slice(0, 5).map((hashtag, index) => (
-            <span key={index} className="text-xs text-blue-600">#{hashtag}</span>
+            <span key={index} className="text-xs text-pilot-blue-400 font-sans">#{hashtag}</span>
           ))}
           {post.hashtags.length > 5 && (
-            <span className="text-xs text-gray-500">+{post.hashtags.length - 5} more</span>
+            <span className="text-xs text-pilot-dark-400 font-sans">+{post.hashtags.length - 5} more</span>
           )}
         </div>
       )}
@@ -399,8 +399,8 @@ const PostComposer = ({
   };
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
-      <h2 className="text-2xl font-bold text-gray-800 mb-6">Schedule Post</h2>
+    <div className="bg-pilot-dark-700/50 backdrop-blur-sm border border-pilot-dark-600 rounded-organic-lg p-6 shadow-organic-md">
+      <h2 className="text-2xl font-bold text-pilot-dark-100 mb-6 font-sans">Schedule Post</h2>
       
       <div className="space-y-6">
         <Textarea
@@ -412,36 +412,36 @@ const PostComposer = ({
         />
         
         <div className="space-y-3">
-          <label className="block text-sm font-medium text-gray-700">Select Platforms</label>
+          <label className="block text-sm font-medium text-pilot-dark-200 font-sans">Select Platforms</label>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
             {platforms.map(platform => (
               <button
                 key={platform.id}
                 onClick={() => togglePlatform(platform.id)}
-                className={`p-3 rounded-lg border-2 transition-all duration-200 flex items-center space-x-2 ${
+                className={`p-3 rounded-organic-md border-2 transition-all duration-300 flex items-center space-x-2 transform hover:scale-105 ${
                   selectedPlatforms.includes(platform.id)
-                    ? 'border-blue-500 bg-blue-50 text-blue-700'
-                    : 'border-gray-200 hover:border-gray-300 text-gray-600'
+                    ? 'border-pilot-purple-400 bg-pilot-purple-500/20 text-pilot-purple-300 shadow-organic-sm'
+                    : 'border-pilot-dark-600 hover:border-pilot-dark-500 text-pilot-dark-300 hover:bg-pilot-dark-600/30'
                 }`}
               >
                 <div 
                   className="w-4 h-4 rounded-full"
                   style={{ backgroundColor: platform.color }}
                 ></div>
-                <span className="text-sm font-medium">{platform.name}</span>
+                <span className="text-sm font-medium font-sans">{platform.name}</span>
               </button>
             ))}
           </div>
         </div>
         
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">Schedule Time (optional)</label>
+          <label className="block text-sm font-medium text-pilot-dark-200 font-sans">Schedule Time (optional)</label>
           <input
             type="datetime-local"
             value={scheduledTime}
             onChange={(e) => setScheduledTime(e.target.value)}
             min={new Date().toISOString().slice(0, 16)}
-            className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
+            className="w-full bg-pilot-dark-700/30 backdrop-blur-sm border border-pilot-dark-600 rounded-organic-md px-4 py-3 text-pilot-dark-200 placeholder-pilot-dark-400 focus:outline-none focus:ring-2 focus:ring-pilot-purple-400 focus:border-pilot-purple-400 transition-all duration-300"
           />
         </div>
         
@@ -653,8 +653,11 @@ export default function SocialPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-pilot-dark-800 flex items-center justify-center">
-        <div className="absolute inset-0 bg-gradient-to-br from-pilot-purple-900/30 via-pilot-dark-800 to-pilot-blue-900/30"></div>
+      <div className="min-h-screen bg-pilot-dark-900 flex items-center justify-center">
+        <div className="absolute inset-0 bg-gradient-to-br from-pilot-purple-900/20 via-pilot-dark-900 to-pilot-blue-900/20"></div>
+        <div className="absolute inset-0 bg-gradient-to-tr from-pilot-purple-600/10 via-transparent to-pilot-blue-500/10"></div>
+        <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-gradient-to-r from-pilot-purple-500/10 to-pilot-blue-500/10 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-1/3 left-1/3 w-80 h-80 bg-gradient-to-r from-pilot-blue-500/10 to-pilot-purple-500/10 rounded-full blur-3xl"></div>
         <div className="text-center relative z-10">
           <div className="animate-spin rounded-full h-16 w-16 border-4 border-pilot-purple-500/20 border-t-pilot-purple-400 mx-auto mb-6"></div>
           <p className="text-pilot-dark-300 font-sans text-lg">Loading social media data...</p>
@@ -664,62 +667,78 @@ export default function SocialPage() {
   }
 
   return (
-    <div className="min-h-screen bg-pilot-dark-800 p-8">
-      <div className="absolute inset-0 bg-gradient-to-br from-pilot-purple-900/20 via-pilot-dark-800 to-pilot-blue-900/20"></div>
-      <div className="absolute inset-0 opacity-[0.03]">
-        <div className="w-full h-full bg-[radial-gradient(circle_at_center,#7C3AED_1px,transparent_1px)] bg-[length:32px_32px]"></div>
+    <div className="min-h-screen bg-pilot-dark-900 relative overflow-hidden">
+      {/* 3D Gradient Background */}
+      <div className="absolute inset-0">
+        <div className="absolute inset-0 bg-gradient-to-br from-pilot-purple-900/20 via-pilot-dark-800 to-pilot-blue-900/20"></div>
+        <div className="absolute inset-0 bg-gradient-to-tr from-pilot-purple-600/10 via-transparent to-pilot-blue-500/10"></div>
+        <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-gradient-to-r from-pilot-purple-500/10 to-pilot-blue-500/10 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-1/3 left-1/3 w-80 h-80 bg-gradient-to-r from-pilot-blue-500/10 to-pilot-purple-500/10 rounded-full blur-3xl"></div>
+        <div className="absolute inset-0 opacity-[0.02]">
+          <div className="w-full h-full bg-[radial-gradient(circle_at_center,#7C3AED_2px,transparent_2px)] bg-[length:60px_60px]"></div>
+        </div>
       </div>
-      <div className="max-w-7xl mx-auto relative z-10">
+
+      <div className="relative z-10 p-6">
+        <div className="max-w-6xl mx-auto">
         <div className="mb-10">
           <h1 className="text-4xl font-bold text-pilot-dark-100 mb-4 font-sans">Social Media Management</h1>
           <p className="text-pilot-dark-400 text-lg font-sans">Connect and manage your social media accounts with professional analytics</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
-          <div className="bg-pilot-dark-700/50 backdrop-blur-sm border border-pilot-dark-600 rounded-organic-lg p-6 text-center shadow-organic-md hover:shadow-organic-lg transition-all duration-300 transform hover:scale-105">
-            <div className="text-4xl font-bold text-pilot-blue-400 mb-3 font-sans">{connectedAccounts.length}</div>
-            <div className="text-pilot-dark-300 font-sans">Connected Accounts</div>
-          </div>
-          <div className="bg-pilot-dark-700/50 backdrop-blur-sm border border-pilot-dark-600 rounded-organic-lg p-6 text-center shadow-organic-md hover:shadow-organic-lg transition-all duration-300 transform hover:scale-105">
-            <div className="text-4xl font-bold text-pilot-accent-emerald mb-3 font-sans">{totalFollowers.toLocaleString()}</div>
-            <div className="text-pilot-dark-300 font-sans">Total Followers</div>
-          </div>
-          <div className="bg-pilot-dark-700/50 backdrop-blur-sm border border-pilot-dark-600 rounded-organic-lg p-6 text-center shadow-organic-md hover:shadow-organic-lg transition-all duration-300 transform hover:scale-105">
-            <div className="text-4xl font-bold text-pilot-purple-400 mb-3 font-sans">{totalPosts}</div>
-            <div className="text-pilot-dark-300 font-sans">Total Posts</div>
-          </div>
-          <div className="bg-pilot-dark-700/50 backdrop-blur-sm border border-pilot-dark-600 rounded-organic-lg p-6 text-center shadow-organic-md hover:shadow-organic-lg transition-all duration-300 transform hover:scale-105">
-            <div className="text-4xl font-bold text-pilot-accent-orange mb-3 font-sans">{avgEngagement.toFixed(1)}%</div>
-            <div className="text-pilot-dark-300 font-sans">Avg Engagement</div>
-          </div>
-        </div>
-
-        <div className="mb-8">
-          <div className="bg-pilot-dark-700/30 backdrop-blur-sm border border-pilot-dark-600 rounded-organic-lg p-2 shadow-organic-sm">
-            <div className="flex space-x-2">
-              <button
-                onClick={() => setActiveTab('accounts')}
-                className={`flex-1 py-4 px-8 rounded-organic-md font-medium font-sans transition-all duration-300 ${
-                  activeTab === 'accounts'
-                    ? 'bg-gradient-to-r from-pilot-purple-500 to-pilot-blue-500 text-white shadow-organic-md transform scale-[1.02]'
-                    : 'text-pilot-dark-300 hover:bg-pilot-dark-600/30'
-                }`}
-              >
-                Social Accounts
-              </button>
-              <button
-                onClick={() => setActiveTab('schedule')}
-                className={`flex-1 py-4 px-8 rounded-organic-md font-medium font-sans transition-all duration-300 ${
-                  activeTab === 'schedule'
-                    ? 'bg-gradient-to-r from-pilot-purple-500 to-pilot-blue-500 text-white shadow-organic-md transform scale-[1.02]'
-                    : 'text-pilot-dark-300 hover:bg-pilot-dark-600/30'
-                }`}
-              >
-                Content Scheduler
-              </button>
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div className="bg-pilot-dark-700/20 backdrop-blur-xl border border-pilot-dark-600 rounded-organic-lg p-6 text-center shadow-organic-lg hover:shadow-organic-xl transition-all duration-300 transform hover:scale-[1.02]">
+              <div className="text-3xl font-bold text-pilot-blue-400 mb-2 font-sans">{connectedAccounts.length}</div>
+              <div className="text-pilot-dark-300 text-sm font-sans">Connected Accounts</div>
+            </div>
+            <div className="bg-pilot-dark-700/20 backdrop-blur-xl border border-pilot-dark-600 rounded-organic-lg p-6 text-center shadow-organic-lg hover:shadow-organic-xl transition-all duration-300 transform hover:scale-[1.02]">
+              <div className="text-3xl font-bold text-pilot-accent-emerald mb-2 font-sans">{totalFollowers.toLocaleString()}</div>
+              <div className="text-pilot-dark-300 text-sm font-sans">Total Followers</div>
+            </div>
+            <div className="bg-pilot-dark-700/20 backdrop-blur-xl border border-pilot-dark-600 rounded-organic-lg p-6 text-center shadow-organic-lg hover:shadow-organic-xl transition-all duration-300 transform hover:scale-[1.02]">
+              <div className="text-3xl font-bold text-pilot-purple-400 mb-2 font-sans">{totalPosts}</div>
+              <div className="text-pilot-dark-300 text-sm font-sans">Total Posts</div>
+            </div>
+            <div className="bg-pilot-dark-700/20 backdrop-blur-xl border border-pilot-dark-600 rounded-organic-lg p-6 text-center shadow-organic-lg hover:shadow-organic-xl transition-all duration-300 transform hover:scale-[1.02]">
+              <div className="text-3xl font-bold text-pilot-accent-orange mb-2 font-sans">{avgEngagement.toFixed(1)}%</div>
+              <div className="text-pilot-dark-300 text-sm font-sans">Avg Engagement</div>
             </div>
           </div>
-        </div>
+
+          {/* Tab Navigation */}
+          <div className="mb-8">
+            <div className="bg-pilot-dark-700/20 backdrop-blur-xl border border-pilot-dark-600 rounded-organic-xl p-2 shadow-organic-lg">
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => setActiveTab('accounts')}
+                  className={`flex-1 py-3 px-6 rounded-organic-lg font-medium font-sans transition-all duration-300 ${
+                    activeTab === 'accounts'
+                      ? 'bg-gradient-to-r from-pilot-purple-500 to-pilot-blue-500 text-white shadow-organic-lg transform scale-[1.02]'
+                      : 'text-pilot-dark-300 hover:bg-pilot-dark-600/30'
+                  }`}
+                >
+                  <svg className="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                  Social Accounts
+                </button>
+                <button
+                  onClick={() => setActiveTab('schedule')}
+                  className={`flex-1 py-3 px-6 rounded-organic-lg font-medium font-sans transition-all duration-300 ${
+                    activeTab === 'schedule'
+                      ? 'bg-gradient-to-r from-pilot-purple-500 to-pilot-blue-500 text-white shadow-organic-lg transform scale-[1.02]'
+                      : 'text-pilot-dark-300 hover:bg-pilot-dark-600/30'
+                  }`}
+                >
+                  <svg className="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  Content Scheduler
+                </button>
+              </div>
+            </div>
+          </div>
 
         {activeTab === 'accounts' ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -741,18 +760,18 @@ export default function SocialPage() {
             
             <div className="lg:col-span-2">
               <div className="mb-6">
-                <h2 className="text-2xl font-bold text-gray-800 mb-4">Scheduled Posts</h2>
+                <h2 className="text-2xl font-bold text-pilot-dark-100 mb-4 font-sans">Scheduled Posts</h2>
               </div>
               
-              <div className="space-y-6">
+              <div className="space-y-4">
                 {scheduledPosts.length === 0 ? (
                   <div className="text-center py-12">
-                    <div className="bg-white border border-gray-200 rounded-xl p-8 shadow-sm">
-                      <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    <div className="bg-pilot-dark-700/20 backdrop-blur-xl border border-pilot-dark-600 rounded-organic-lg p-8 shadow-organic-md">
+                      <svg className="w-16 h-16 text-pilot-dark-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                       </svg>
-                      <p className="text-gray-600 text-lg mb-4">No scheduled posts</p>
-                      <p className="text-gray-500">Create your first scheduled post using the composer on the left</p>
+                      <p className="text-pilot-dark-300 text-lg mb-4 font-sans">No scheduled posts</p>
+                      <p className="text-pilot-dark-500 font-sans">Create your first scheduled post using the composer on the left</p>
                     </div>
                   </div>
                 ) : (
@@ -769,7 +788,8 @@ export default function SocialPage() {
               </div>
             </div>
           </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );

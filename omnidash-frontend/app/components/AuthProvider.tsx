@@ -10,7 +10,7 @@ const supabase = createClient(
 );
 
 interface AuthContextType {
-  user: any;
+  user: unknown;
   loading: boolean;
   supabase: typeof supabase;
   connectedPlatforms: string[];

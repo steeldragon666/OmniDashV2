@@ -30,12 +30,12 @@ export const authOptions: NextAuthOptions = {
     error: '/auth/error',
   },
   callbacks: {
-    async signIn({ user, account, profile }) {
+    async signIn({ user, account }) {
       try {
         // Skip Supabase operations if not configured
         if (supabase) {
           // Save user to Supabase
-          const { data, error } = await supabase
+          const { error } = await supabase
             .from('users')
             .upsert({
               id: user.id,

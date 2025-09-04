@@ -134,7 +134,7 @@ export async function POST(request: NextRequest) {
     const { action, messageId, labelIds, body } = await request.json();
 
     let apiUrl: string;
-    let method = 'POST';
+    const method = 'POST';
     let requestBody: any = {};
 
     switch (action) {

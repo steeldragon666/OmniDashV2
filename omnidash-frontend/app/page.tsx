@@ -12,8 +12,8 @@ export default function HomePage() {
     // Start logo animation immediately
     setTimeout(() => setLogoAnimated(true), 500);
     
-    // Show login wall after 4 seconds
-    setTimeout(() => setShowLoginWall(true), 4000);
+    // Show login wall after 2 seconds (reduced from 4)
+    setTimeout(() => setShowLoginWall(true), 2000);
   }, []);
 
   const handleGetStarted = () => {
@@ -94,6 +94,19 @@ export default function HomePage() {
                 {feature}
               </div>
             ))}
+          </div>
+
+          {/* Get Started Button */}
+          <div className={`transform transition-all duration-2000 ease-out ${logoAnimated ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '2s' }}>
+            <button 
+              onClick={handleGetStarted}
+              className="py-4 px-12 bg-gradient-to-r from-pilot-purple-500 to-pilot-blue-500 text-white font-bold font-sans rounded-organic-md shadow-organic-lg hover:shadow-organic-xl transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-pilot-purple-400/50"
+            >
+              Get Started Free
+            </button>
+            <p className="text-pilot-dark-500 text-sm font-sans mt-4">
+              No credit card required • Start in 30 seconds
+            </p>
           </div>
         </div>
       </div>

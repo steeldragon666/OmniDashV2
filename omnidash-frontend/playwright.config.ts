@@ -20,15 +20,16 @@ export default defineConfig({
   
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: [
-    ['html', { outputFolder: 'test-results/html' }],
+    ['html'],
     ['json', { outputFile: 'test-results/results.json' }],
-    ['junit', { outputFile: 'test-results/junit.xml' }]
+    ['junit', { outputFile: 'test-results/results.xml' }],
+    ['line']
   ],
   
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
-    baseURL: process.env.BASE_URL || 'http://localhost:3001',
+    baseURL: 'http://localhost:3000',
     
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
@@ -39,10 +40,10 @@ export default defineConfig({
     /* Record video on failure */
     video: 'retain-on-failure',
     
-    /* Timeout for each action */
+    /* Global timeout for each action */
     actionTimeout: 10000,
     
-    /* Timeout for navigation */
+    /* Global timeout for navigation */
     navigationTimeout: 30000,
   },
 
@@ -84,20 +85,14 @@ export default defineConfig({
     },
   ],
 
-  /* Global test setup */
-  globalSetup: require.resolve('./tests/setup/global-setup.ts'),
-  
-  /* Global test teardown */
-  globalTeardown: require.resolve('./tests/setup/global-teardown.ts'),
-
   /* Run your local dev server before starting the tests */
   webServer: {
     command: 'npm run dev',
-    url: 'http://localhost:3001',
+    url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
     timeout: 120000,
   },
-
+  
   /* Test timeout */
   timeout: 30000,
   
@@ -105,10 +100,13 @@ export default defineConfig({
   expect: {
     timeout: 5000,
   },
-
-  /* Output directory for test results */
-  outputDir: 'test-results/artifacts',
   
-  /* Maximum number of test failures before stopping */
-  maxFailures: process.env.CI ? 5 : undefined,
+  /* Output directory for test artifacts */
+  outputDir: 'test-results/',
+  
+  /* Global setup */
+  globalSetup: './tests/global-setup.ts',
+  
+  /* Global teardown */
+  globalTeardown: './tests/global-teardown.ts',
 });

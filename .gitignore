@@ -1,9 +1,43 @@
-omnidash-backend/node_modules/
-omnidash-frontend/node_modules/
-omnidash-frontend/.next/
-out/
+# Dependencies
+node_modules/
+*/node_modules/
+
+# Environment variables  
+.env
 .env.local
 .env.production
+omnidash-frontend/.env
+!.env.example
+!.env.development
+
+# IDE
+.vscode/
+.idea/
+
+# Build
 dist/
+build/
+.next/
+omnidash-frontend/.next/
+
+# Logs
+logs/
 *.log
+
+# PM2
+.pm2/
+
+# OS
 .DS_Store
+Thumbs.db
+
+# Vercel
+.vercel
+omnidash-frontend/.vercel
+
+# Testing
+coverage/
+
+# Temp
+tmp/
+temp/

@@ -2,8 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { signIn, getSession } from 'next-auth/react';
-import { useAuth } from '@/app/components/AuthProvider';
+import { signIn, useSession } from 'next-auth/react';
 
 // Pilot Pen Design System Input Component
 const Input = ({ 
@@ -105,7 +104,7 @@ const Button = ({
 
 export default function LoginPage() {
   const router = useRouter();
-  const { user, loading: authLoading } = useAuth();
+  const { data: session, status } = useSession();
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -115,10 +114,10 @@ export default function LoginPage() {
 
   // Redirect if already logged in
   React.useEffect(() => {
-    if (user && !authLoading) {
-      router.push('/');
+    if (session && status === 'authenticated') {
+      router.push('/dashboard');
     }
-  }, [user, authLoading, router]);
+  }, [session, status, router]);
 
   const handleInputChange = (field: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({ ...prev, [field]: e.target.value }));
@@ -168,7 +167,7 @@ export default function LoginPage() {
     
     try {
       const result = await signIn(provider, { 
-        callbackUrl: '/',
+        callbackUrl: '/dashboard',
         redirect: false 
       });
       
@@ -176,7 +175,7 @@ export default function LoginPage() {
         setErrors({ general: `${provider} login failed. Please try again.` });
       } else if (result?.ok) {
         // Redirect will be handled automatically by NextAuth
-        router.push('/');
+        router.push('/dashboard');
       }
     } catch (error) {
       setErrors({ general: `Failed to sign in with ${provider}. Please try again.` });
@@ -257,12 +256,12 @@ export default function LoginPage() {
                 <span className="ml-2 text-sm text-pilot-dark-200 font-sans">Remember me</span>
               </label>
               
-              <button 
-                type="button"
+              <a 
+                href="/auth/forgot-password"
                 className="text-sm text-pilot-purple-400 hover:text-pilot-purple-300 font-medium transition-colors font-sans"
               >
                 Forgot password?
-              </button>
+              </a>
             </div>
 
             <Button 

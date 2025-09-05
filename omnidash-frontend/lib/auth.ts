@@ -53,13 +53,16 @@ export const authOptions: NextAuthOptions = {
 
           if (error) {
             console.error('Error saving user to Supabase:', error)
+            // Don't fail sign in if Supabase save fails
           }
         }
 
+        // Always return true to allow sign in
         return true
       } catch (error) {
         console.error('SignIn callback error:', error)
-        return false
+        // Don't fail sign in due to callback errors
+        return true
       }
     },
     async session({ session, token }) {
@@ -82,6 +85,15 @@ export const authOptions: NextAuthOptions = {
         token.provider = account.provider
       }
       return token
+    },
+    async redirect({ url, baseUrl }) {
+      // After successful sign in, redirect to dashboard
+      if (url === baseUrl) return `${baseUrl}/dashboard`
+      // Allows relative callback URLs
+      if (url.startsWith("/")) return `${baseUrl}${url}`
+      // Allows callback URLs on the same origin
+      else if (new URL(url).origin === baseUrl) return url
+      return `${baseUrl}/dashboard`
     }
   },
   session: {

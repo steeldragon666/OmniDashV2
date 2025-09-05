@@ -473,8 +473,10 @@ const PostComposer = ({
 };
 
 export default function SocialPage() {
+  const { data: session } = useSession();
   const [accounts, setAccounts] = useState<SocialAccount[]>([]);
   const [scheduledPosts, setScheduledPosts] = useState<PostSchedule[]>([]);
+  const [campaigns, setCampaigns] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('accounts');
 
@@ -539,7 +541,7 @@ export default function SocialPage() {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [session]);
 
   const handleConnect = async (platform: string) => {
     try {

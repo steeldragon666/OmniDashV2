@@ -777,7 +777,7 @@ export class WorkflowEngine extends EventEmitter {
     this.registerActionHandler('data-transform', {
       execute: async (action, context) => {
         const { transformations } = action.config.parameters || {};
-        let data = { ...context.variables };
+        const data = { ...context.variables };
         
         for (const transform of transformations || []) {
           switch (transform.type) {

@@ -29,7 +29,7 @@ const mockCategories = {
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const category = searchParams.get('category');
-  const format = searchParams.get('format') || 'svg';
+  const _format = searchParams.get('format') || 'svg';
 
   try {
     let icons: Record<string, string> = mockIcons;
@@ -51,7 +51,7 @@ export async function GET(request: Request) {
       categories: mockCategories,
       totalIcons: Object.keys(mockIcons).length,
     });
-  } catch (error) {
+  } catch (_error) {
     return NextResponse.json(
       { success: false, error: 'Failed to fetch icons' },
       { status: 500 }

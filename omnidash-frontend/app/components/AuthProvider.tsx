@@ -4,10 +4,17 @@ import { SessionProvider } from 'next-auth/react';
 import { createContext, useContext, useEffect, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co',
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key'
-);
+// Initialize Supabase client with required environment variables
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error(
+    'Missing required Supabase environment variables. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY'
+  );
+}
+
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 interface AuthContextType {
   user: unknown;
@@ -25,11 +32,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [connectedPlatforms, setConnectedPlatforms] = useState<string[]>([]);
 
   useEffect(() => {
-    // Skip Supabase initialization if environment variables are not set
-    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-      setLoading(false);
-      return;
-    }
+    // Environment variables are already validated above
+    // If we reach here, Supabase is properly configured
 
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {

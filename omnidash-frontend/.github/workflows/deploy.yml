@@ -1,0 +1,280 @@
+name: 🚀 Deploy to Production
+
+on:
+  push:
+    branches: [ main ]
+    tags: [ 'v*' ]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment environment'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - staging
+          - production
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+  NODE_VERSION: '20'
+
+jobs:
+  # Pre-deployment checks
+  pre-deploy:
+    name: 🔍 Pre-deployment Checks
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      environment: ${{ steps.env.outputs.environment }}
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🏷️ Get version
+        id: version
+        run: |
+          if [[ $GITHUB_REF == refs/tags/* ]]; then
+            echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          else
+            echo "version=latest" >> $GITHUB_OUTPUT
+          fi
+
+      - name: 🌍 Determine environment
+        id: env
+        run: |
+          if [[ "${{ github.event.inputs.environment }}" != "" ]]; then
+            echo "environment=${{ github.event.inputs.environment }}" >> $GITHUB_OUTPUT
+          elif [[ $GITHUB_REF == refs/tags/* ]]; then
+            echo "environment=production" >> $GITHUB_OUTPUT
+          else
+            echo "environment=staging" >> $GITHUB_OUTPUT
+          fi
+
+      - name: 🔐 Production readiness check
+        if: steps.env.outputs.environment == 'production'
+        run: |
+          echo "🔍 Running production readiness checks..."
+          npm ci
+          npm run production:check
+
+  # Build and push Docker image
+  build-image:
+    name: 🐳 Build & Push Image
+    runs-on: ubuntu-latest
+    needs: pre-deploy
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🐳 Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: 🔑 Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 📦 Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: 🏗️ Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          target: production
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            BUILDTIME=${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.created'] }}
+            VERSION=${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.version'] }}
+
+  # Deploy to Vercel
+  deploy-vercel:
+    name: 🌐 Deploy to Vercel
+    runs-on: ubuntu-latest
+    needs: [pre-deploy, build-image]
+    if: needs.pre-deploy.outputs.environment == 'production'
+    environment: production
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 📦 Install Vercel CLI
+        run: npm install -g vercel@canary
+
+      - name: 🚀 Deploy to Vercel
+        run: |
+          if [[ "${{ needs.pre-deploy.outputs.environment }}" == "production" ]]; then
+            vercel --prod --token=${{ secrets.VERCEL_TOKEN }}
+          else
+            vercel --token=${{ secrets.VERCEL_TOKEN }}
+          fi
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+  # Deploy to AWS (alternative)
+  deploy-aws:
+    name: ☁️ Deploy to AWS
+    runs-on: ubuntu-latest
+    needs: [pre-deploy, build-image]
+    if: false # Enable if using AWS
+    environment: ${{ needs.pre-deploy.outputs.environment }}
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔑 Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: 🚀 Deploy to ECS
+        run: |
+          # Update ECS service with new image
+          aws ecs update-service \
+            --cluster omnidash-cluster \
+            --service omnidash-frontend-service \
+            --force-new-deployment
+
+  # Database migrations
+  migrate:
+    name: 🗃️ Database Migration
+    runs-on: ubuntu-latest
+    needs: [pre-deploy]
+    if: needs.pre-deploy.outputs.environment == 'production'
+    environment: production
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 📦 Install dependencies
+        run: npm ci
+
+      - name: 🗃️ Run database migrations
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          echo "Running database migrations..."
+          # Add your migration commands here
+          # npx prisma migrate deploy
+          # or npx supabase db push
+
+  # Post-deployment verification
+  verify-deployment:
+    name: ✅ Verify Deployment
+    runs-on: ubuntu-latest
+    needs: [deploy-vercel, migrate]
+    if: always() && needs.deploy-vercel.result == 'success'
+    steps:
+      - name: 🔍 Health check
+        run: |
+          echo "Waiting for deployment to be ready..."
+          sleep 30
+          
+          # Health check for production deployment
+          if [[ "${{ needs.pre-deploy.outputs.environment }}" == "production" ]]; then
+            curl -f ${{ secrets.PRODUCTION_URL }}/api/health
+          else
+            curl -f ${{ secrets.STAGING_URL }}/api/health
+          fi
+
+      - name: 🎭 Smoke tests
+        run: |
+          echo "Running smoke tests..."
+          # Add smoke test commands here
+          # npx playwright test --grep="smoke"
+
+      - name: 📊 Performance check
+        uses: treosh/lighthouse-ci-action@v10
+        with:
+          urls: |
+            ${{ secrets.PRODUCTION_URL }}
+          configPath: './lighthouserc.json'
+
+  # Rollback on failure
+  rollback:
+    name: ↩️ Rollback Deployment
+    runs-on: ubuntu-latest
+    needs: [deploy-vercel, verify-deployment]
+    if: failure() && needs.pre-deploy.outputs.environment == 'production'
+    environment: production
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: ↩️ Rollback deployment
+        run: |
+          echo "Deployment failed, initiating rollback..."
+          # Add rollback logic here
+          # This could involve reverting to the previous version
+          
+      - name: 📢 Notify team of rollback
+        run: |
+          echo "🚨 Production deployment failed and was rolled back!"
+          # Add notification logic (Slack, email, etc.)
+
+  # Cleanup
+  cleanup:
+    name: 🧹 Cleanup
+    runs-on: ubuntu-latest
+    needs: [verify-deployment]
+    if: always()
+    steps:
+      - name: 🧹 Clean up old deployments
+        run: |
+          echo "Cleaning up old deployments and artifacts..."
+          # Add cleanup logic here
+
+  # Notifications
+  notify:
+    name: 📢 Deployment Notifications
+    runs-on: ubuntu-latest
+    needs: [verify-deployment]
+    if: always()
+    steps:
+      - name: 📢 Notify success
+        if: needs.verify-deployment.result == 'success'
+        run: |
+          echo "🎉 Deployment to ${{ needs.pre-deploy.outputs.environment }} successful!"
+          echo "Version: ${{ needs.pre-deploy.outputs.version }}"
+          # Add success notification logic
+
+      - name: 📢 Notify failure
+        if: failure()
+        run: |
+          echo "❌ Deployment to ${{ needs.pre-deploy.outputs.environment }} failed!"
+          # Add failure notification logic

@@ -1,0 +1,73 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  - "alert_rules.yml"
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - alertmanager:9093
+
+scrape_configs:
+  # OmniDash Frontend Application
+  - job_name: 'omnidash-frontend'
+    static_configs:
+      - targets: ['omnidash-frontend:3000']
+    metrics_path: '/api/metrics'
+    scrape_interval: 30s
+    scrape_timeout: 10s
+    scheme: http
+
+  # Prometheus itself
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+    scrape_interval: 30s
+
+  # Node Exporter (system metrics)
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+    scrape_interval: 30s
+
+  # Redis Exporter
+  - job_name: 'redis-exporter'
+    static_configs:
+      - targets: ['redis-exporter:9121']
+    scrape_interval: 30s
+
+  # PostgreSQL Exporter
+  - job_name: 'postgres-exporter'
+    static_configs:
+      - targets: ['postgres-exporter:9187']
+    scrape_interval: 30s
+
+  # Nginx metrics (if using nginx)
+  - job_name: 'nginx'
+    static_configs:
+      - targets: ['nginx:8080']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+
+  # Application-specific health checks
+  - job_name: 'omnidash-health'
+    static_configs:
+      - targets: ['omnidash-frontend:3000']
+    metrics_path: '/api/health'
+    scrape_interval: 60s
+    metric_relabel_configs:
+      - source_labels: [__name__]
+        target_label: job
+        replacement: 'health-check'
+
+  # Custom business metrics
+  - job_name: 'omnidash-business'
+    static_configs:
+      - targets: ['omnidash-frontend:3000']
+    metrics_path: '/api/dashboard/stats'
+    scrape_interval: 300s  # Every 5 minutes
+    params:
+      format: ['prometheus']

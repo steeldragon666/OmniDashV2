@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
 }
 
 // POST /api/automation/social - Create social automation
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
   try {
     const body = await request.json();
     const { type, config } = body;

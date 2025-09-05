@@ -1,0 +1,115 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: omnidash-postgres
+    environment:
+      POSTGRES_DB: omnidash
+      POSTGRES_USER: omnidash
+      POSTGRES_PASSWORD: omnidash_dev_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./omnidash-backend/prisma/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - omnidash-network
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: omnidash-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - omnidash-network
+
+  # Backend API
+  backend:
+    build:
+      context: ./omnidash-backend
+      dockerfile: Dockerfile
+    container_name: omnidash-backend
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgresql://omnidash:omnidash_dev_password@postgres:5432/omnidash
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: your-jwt-secret-key
+      PORT: 3001
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./omnidash-backend:/app
+      - /app/node_modules
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - omnidash-network
+    command: pnpm dev
+
+  # Frontend Application
+  frontend:
+    build:
+      context: ./omnidash-frontend
+      dockerfile: Dockerfile
+    container_name: omnidash-frontend
+    environment:
+      NODE_ENV: development
+      NEXT_PUBLIC_API_URL: http://localhost:3001
+      NEXTAUTH_URL: http://localhost:3000
+      NEXTAUTH_SECRET: your-nextauth-secret
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./omnidash-frontend:/app
+      - /app/node_modules
+      - /app/.next
+    depends_on:
+      - backend
+    networks:
+      - omnidash-network
+    command: pnpm dev
+
+  # N8N Workflow Automation
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: omnidash-n8n
+    environment:
+      N8N_BASIC_AUTH_ACTIVE: true
+      N8N_BASIC_AUTH_USER: admin
+      N8N_BASIC_AUTH_PASSWORD: admin123
+      N8N_HOST: localhost
+      N8N_PORT: 5678
+      N8N_PROTOCOL: http
+      WEBHOOK_URL: http://localhost:5678
+      GENERIC_TIMEZONE: UTC
+    ports:
+      - "5678:5678"
+    volumes:
+      - n8n_data:/home/node/.n8n
+    networks:
+      - omnidash-network
+
+  # Mailhog for email testing
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: omnidash-mailhog
+    ports:
+      - "1025:1025"  # SMTP
+      - "8025:8025"  # Web UI
+    networks:
+      - omnidash-network
+
+volumes:
+  postgres_data:
+  redis_data:
+  n8n_data:
+
+networks:
+  omnidash-network:
+    driver: bridge

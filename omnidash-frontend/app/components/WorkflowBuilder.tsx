@@ -422,7 +422,6 @@ function WorkflowNodeComponent({
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
   const template = nodeTemplates.find(t => t.type === node.type);
-  if (!template) return null;
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if (e.button === 0) {
@@ -436,9 +435,8 @@ function WorkflowNodeComponent({
   };
 
   useEffect(() => {
-    if (!isDragging) return;
-    
     const handleGlobalMouseMove = (e: MouseEvent) => {
+      if (!isDragging) return;
       onUpdate({
         position: {
           x: e.clientX - dragStart.x,
@@ -451,14 +449,18 @@ function WorkflowNodeComponent({
       setIsDragging(false);
     };
 
-    document.addEventListener('mousemove', handleGlobalMouseMove);
-    document.addEventListener('mouseup', handleGlobalMouseUp);
+    if (isDragging) {
+      document.addEventListener('mousemove', handleGlobalMouseMove);
+      document.addEventListener('mouseup', handleGlobalMouseUp);
+    }
 
     return () => {
       document.removeEventListener('mousemove', handleGlobalMouseMove);
       document.removeEventListener('mouseup', handleGlobalMouseUp);
     };
   }, [isDragging, dragStart, onUpdate]);
+
+  if (!template) return null;
 
   return (
     <div

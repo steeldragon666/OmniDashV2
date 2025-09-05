@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 interface AnalyticsData {
   engagement: {
@@ -425,11 +425,9 @@ export default function AnalyticsPage() {
     posts: { total: 0, change: 0, trend: 'stable' }
   });
 
-  const fetchAnalytics = async () => {
+  const fetchAnalytics = useCallback(async () => {
     try {
-      const response = await fetch(`http://localhost:3000/api/analytics?brand=${selectedBrand}&period=${selectedPeriod}`, {
-        credentials: 'include'
-      });
+      const response = await fetch(`/api/social/analytics?period=${selectedPeriod}&brand=${selectedBrand}`);
       
       if (response.ok) {
         const data = await response.json();
@@ -447,11 +445,11 @@ export default function AnalyticsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedBrand, selectedPeriod]);
 
   useEffect(() => {
     fetchAnalytics();
-  }, [selectedBrand, selectedPeriod]);
+  }, [selectedBrand, selectedPeriod, fetchAnalytics]);
 
   const engagementData: ChartData = {
     labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],

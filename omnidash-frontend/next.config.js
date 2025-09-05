@@ -4,7 +4,35 @@ const nextConfig = {
   
   // Enable experimental features for better performance
   experimental: {
-    serverComponentsExternalPackages: ['@anthropic-ai/sdk', '@supabase/supabase-js']
+    serverComponentsExternalPackages: ['@anthropic-ai/sdk', '@supabase/supabase-js', 'winston', 'winston-daily-rotate-file', 'jsonwebtoken', 'rate-limiter-flexible']
+  },
+  
+  // Webpack configuration to handle Node.js modules and optional dependencies
+  webpack: (config, { isServer }) => {
+    // Handle Node.js modules that shouldn't be bundled for client
+    config.resolve.fallback = {
+      ...config.resolve.fallback,
+      fs: false,
+      crypto: false,
+      stream: false,
+      util: false,
+      buffer: false,
+      process: false
+    };
+    
+    // Ignore optional dependencies that may not be available
+    config.externals = config.externals || [];
+    if (isServer) {
+      config.externals.push('drizzle-orm');
+    }
+    
+    // Ignore warnings for optional dependencies
+    config.ignoreWarnings = [
+      { module: /node_modules\/rate-limiter-flexible\/lib\/RateLimiterDrizzle\.js/ },
+      { module: /drizzle-orm/ }
+    ];
+    
+    return config;
   },
 
   // Image optimization
@@ -68,11 +96,6 @@ const nextConfig = {
     return [
       {
         source: '/home',
-        destination: '/',
-        permanent: true
-      },
-      {
-        source: '/dashboard',
         destination: '/',
         permanent: true
       }

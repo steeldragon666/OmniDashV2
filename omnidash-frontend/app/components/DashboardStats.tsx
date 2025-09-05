@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 
 interface DashboardStats {
@@ -38,13 +38,7 @@ export default function DashboardStats() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (session?.user) {
-      fetchStats();
-    }
-  }, [session]);
-
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch('/api/dashboard/stats', {
@@ -64,7 +58,13 @@ export default function DashboardStats() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [session]);
+
+  useEffect(() => {
+    if (session?.user) {
+      fetchStats();
+    }
+  }, [session, fetchStats]);
 
   if (loading) {
     return <DashboardStatsSkeleton />;

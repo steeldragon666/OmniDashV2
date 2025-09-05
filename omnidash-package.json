@@ -1,0 +1,81 @@
+{
+  "name": "omnidash",
+  "version": "1.0.0",
+  "description": "Multi-Brand Social Media & Automation Dashboard",
+  "private": true,
+  "workspaces": [
+    "omnidash-frontend",
+    "omnidash-backend"
+  ],
+  "scripts": {
+    "dev": "concurrently \"pnpm --filter omnidash-backend dev\" \"pnpm --filter omnidash-frontend dev\"",
+    "dev:all": "pnpm dev",
+    "dev:backend": "pnpm --filter omnidash-backend dev",
+    "dev:frontend": "pnpm --filter omnidash-frontend dev",
+    "build": "pnpm --filter omnidash-backend build && pnpm --filter omnidash-frontend build",
+    "build:all": "pnpm build",
+    "build:backend": "pnpm --filter omnidash-backend build",
+    "build:frontend": "pnpm --filter omnidash-frontend build",
+    "start": "concurrently \"pnpm --filter omnidash-backend start\" \"pnpm --filter omnidash-frontend start\"",
+    "start:all": "pnpm start",
+    "start:backend": "pnpm --filter omnidash-backend start",
+    "start:frontend": "pnpm --filter omnidash-frontend start",
+    "test": "pnpm --filter omnidash-backend test && pnpm --filter omnidash-frontend test",
+    "test:all": "pnpm test",
+    "test:backend": "pnpm --filter omnidash-backend test",
+    "test:frontend": "pnpm --filter omnidash-frontend test",
+    "lint": "pnpm --filter omnidash-backend lint && pnpm --filter omnidash-frontend lint",
+    "lint:all": "pnpm lint",
+    "lint:backend": "pnpm --filter omnidash-backend lint",
+    "lint:frontend": "pnpm --filter omnidash-frontend lint",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "install:all": "pnpm install",
+    "clean": "pnpm --filter omnidash-backend clean && pnpm --filter omnidash-frontend clean",
+    "clean:all": "pnpm clean",
+    "db:generate": "pnpm --filter omnidash-backend prisma:generate",
+    "db:migrate": "pnpm --filter omnidash-backend prisma:migrate",
+    "db:studio": "pnpm --filter omnidash-backend prisma:studio",
+    "db:reset": "pnpm --filter omnidash-backend prisma:migrate:reset",
+    "setup": "pnpm install:all && pnpm db:generate && pnpm db:migrate",
+    "setup:dev": "pnpm setup && pnpm dev",
+    "docker:build": "docker-compose build",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f",
+    "pm2:start": "pm2 start ecosystem.config.js",
+    "pm2:stop": "pm2 stop ecosystem.config.js",
+    "pm2:restart": "pm2 restart ecosystem.config.js",
+    "pm2:logs": "pm2 logs",
+    "health": "curl http://localhost:3001/api/health && curl http://localhost:3000/api/health"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "prettier": "^3.1.0",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "packageManager": "pnpm@8.15.0",
+  "keywords": [
+    "social-media",
+    "automation",
+    "dashboard",
+    "multi-brand",
+    "ai",
+    "workflow",
+    "analytics"
+  ],
+  "author": "OmniDash Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-org/omnidash.git"
+  },
+  "bugs": {
+    "url": "https://github.com/your-org/omnidash/issues"
+  },
+  "homepage": "https://omnidash.io"
+}

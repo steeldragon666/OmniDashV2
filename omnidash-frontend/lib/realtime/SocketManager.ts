@@ -278,7 +278,7 @@ export class SocketIOClient {
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 5;
   private reconnectDelay = 1000;
-  private eventHandlers: Map<string, Function[]> = new Map();
+  private eventHandlers: Map<string, (() => void)[]> = new Map();
 
   private constructor() {}
 
@@ -440,14 +440,14 @@ export class SocketIOClient {
   }
 
   // Event handler management
-  public on(event: string, handler: Function) {
+  public on(event: string, handler: () => void) {
     if (!this.eventHandlers.has(event)) {
       this.eventHandlers.set(event, []);
     }
     this.eventHandlers.get(event)!.push(handler);
   }
 
-  public off(event: string, handler: Function) {
+  public off(event: string, handler: () => void) {
     const handlers = this.eventHandlers.get(event);
     if (handlers) {
       const index = handlers.indexOf(handler);

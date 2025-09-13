@@ -8,6 +8,8 @@
     "dev:next": "next dev -p 3001",
     "build": "node build-prod.js",
     "build:next": "next build",
+    "export": "next export",
+    "build:static": "next build && next export",
     "start": "NODE_ENV=production node server.js",
     "start:next": "next start -p 3001",
     "lint": "next lint",

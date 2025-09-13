@@ -1,0 +1,135 @@
+# Firebase Hosting Deployment Workflow
+# Automatically deploys to Firebase Hosting on push to main branch
+
+name: Deploy to Firebase Hosting
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'omnidash-frontend/**'
+      - 'firebase.json'
+      - '.firebaserc'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'omnidash-frontend/**'
+      - 'firebase.json'
+      - '.firebaserc'
+
+env:
+  NODE_VERSION: '18'
+  FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 🚚 Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: 'omnidash-frontend/package-lock.json'
+          
+      - name: 📦 Install dependencies
+        working-directory: ./omnidash-frontend
+        run: |
+          npm ci --only=production
+          
+      - name: 🔨 Build application
+        working-directory: ./omnidash-frontend
+        env:
+          NEXT_TELEMETRY_DISABLED: 1
+          NODE_ENV: production
+        run: |
+          npm run build
+          npm run export
+          
+      - name: 🧪 Run tests
+        working-directory: ./omnidash-frontend
+        run: |
+          npm run test -- --coverage --watchAll=false
+        continue-on-error: true
+        
+      - name: 📊 Upload coverage reports
+        if: success()
+        uses: codecov/codecov-action@v3
+        with:
+          directory: ./omnidash-frontend/coverage
+          flags: frontend
+          name: omnidash-frontend
+          
+      - name: 🔥 Deploy to Firebase Hosting (Preview)
+        if: github.event_name == 'pull_request'
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: '${{ secrets.GITHUB_TOKEN }}'
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}'
+          projectId: '${{ env.FIREBASE_PROJECT_ID }}'
+          channelId: 'pr-${{ github.event.number }}'
+          expires: '7d'
+          
+      - name: 🚀 Deploy to Firebase Hosting (Production)
+        if: github.ref == 'refs/heads/main'
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: '${{ secrets.GITHUB_TOKEN }}'
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}'
+          projectId: '${{ env.FIREBASE_PROJECT_ID }}'
+          channelId: live
+          
+      - name: 🔔 Notify deployment success
+        if: success() && github.ref == 'refs/heads/main'
+        run: |
+          echo "✅ OmniDash V2 successfully deployed to Firebase Hosting!"
+          echo "🌐 Live URL: https://${{ env.FIREBASE_PROJECT_ID }}.web.app"
+          
+      - name: 🚨 Notify deployment failure
+        if: failure()
+        run: |
+          echo "❌ Deployment failed. Please check the logs above."
+          
+  lighthouse-audit:
+    needs: build-and-deploy
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 🚚 Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: 🔍 Run Lighthouse audit
+        uses: treosh/lighthouse-ci-action@v10
+        with:
+          urls: |
+            https://${{ env.FIREBASE_PROJECT_ID }}.web.app
+            https://${{ env.FIREBASE_PROJECT_ID }}.web.app/dashboard
+            https://${{ env.FIREBASE_PROJECT_ID }}.web.app/social
+          uploadArtifacts: true
+          temporaryPublicStorage: true
+          
+  security-scan:
+    needs: build-and-deploy
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 🚚 Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: 🔒 Run security audit
+        working-directory: ./omnidash-frontend
+        run: |
+          npm audit --audit-level high
+          
+      - name: 🛡️ OWASP ZAP security scan
+        uses: zaproxy/action-baseline@v0.10.0
+        with:
+          target: 'https://${{ env.FIREBASE_PROJECT_ID }}.web.app'

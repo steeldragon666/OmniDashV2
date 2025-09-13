@@ -1,0 +1,21 @@
+{
+  "projects": {
+    "default": "omnidash-v2-production",
+    "staging": "omnidash-v2-staging",
+    "development": "omnidash-v2-dev"
+  },
+  "targets": {
+    "omnidash-v2-production": {
+      "hosting": {
+        "omnidash-frontend": [
+          "omnidash-frontend"
+        ],
+        "omnidash-docs": [
+          "omnidash-docs"
+        ]
+      }
+    }
+  },
+  "etags": {},
+  "dataconnectEmulatorConfig": {}
+}

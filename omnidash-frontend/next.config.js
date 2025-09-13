@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Remove static export - keep as regular Next.js app
+  // Enable standalone output for Docker/Cloud Run deployment
+  output: 'standalone',
   
   // Enable experimental features for better performance
   experimental: {

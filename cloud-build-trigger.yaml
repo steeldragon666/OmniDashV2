@@ -1,0 +1,25 @@
+# Cloud Build Trigger Configuration for OmniDash V2
+# This file can be used to create the trigger via gcloud CLI
+
+name: omnidash-v2-github-trigger
+description: "Automatic build and deploy for OmniDash V2 from GitHub"
+
+github:
+  owner: steeldragon666
+  name: OmniDashV2
+  push:
+    branch: ^main$
+
+filename: cloudbuild.yaml
+
+# Environment substitutions
+substitutions:
+  _SERVICE_NAME: omnidash-frontend
+  _REGION: us-central1
+  _MEMORY: 2Gi
+  _CPU: "2"
+  _MAX_INSTANCES: "10"
+
+# Trigger configuration
+disabled: false
+includeBuildLogs: INCLUDE_BUILD_LOGS_WITH_STATUS

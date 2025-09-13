@@ -1,0 +1,104 @@
+# Google Cloud Run Service Configuration for OmniDash V2
+# This file defines the Cloud Run service specification
+
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: omnidash-frontend
+  labels:
+    app: omnidash
+    version: v2
+    environment: production
+  annotations:
+    run.googleapis.com/ingress: all
+    run.googleapis.com/ingress-status: all
+    run.googleapis.com/description: "OmniDash V2 - AI-Powered Social Media Management Platform"
+spec:
+  template:
+    metadata:
+      labels:
+        app: omnidash
+        version: v2
+      annotations:
+        # Auto-scaling configuration
+        autoscaling.knative.dev/maxScale: "10"
+        autoscaling.knative.dev/minScale: "0"
+        
+        # Resource allocation
+        run.googleapis.com/memory: "2Gi"
+        run.googleapis.com/cpu: "2"
+        
+        # Network configuration
+        run.googleapis.com/vpc-access-connector: ""
+        run.googleapis.com/vpc-access-egress: private-ranges-only
+        
+        # Execution environment
+        run.googleapis.com/execution-environment: gen2
+        run.googleapis.com/startup-cpu-boost: "true"
+        
+        # Security settings
+        run.googleapis.com/sandbox: gvisor
+        
+    spec:
+      containerConcurrency: 80
+      timeoutSeconds: 300
+      serviceAccountName: "" # Use default service account
+      
+      containers:
+      - name: omnidash-frontend
+        image: gcr.io/PROJECT_ID/omnidash-frontend:latest
+        
+        ports:
+        - name: http1
+          containerPort: 3000
+          
+        env:
+        - name: NODE_ENV
+          value: "production"
+        - name: NEXT_TELEMETRY_DISABLED
+          value: "1"
+        - name: PORT
+          value: "3000"
+        - name: HOSTNAME
+          value: "0.0.0.0"
+          
+        resources:
+          limits:
+            cpu: "2000m"
+            memory: "2Gi"
+          requests:
+            cpu: "1000m"
+            memory: "512Mi"
+            
+        # Health check configuration  
+        livenessProbe:
+          httpGet:
+            path: /api/health
+            port: 3000
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+          
+        readinessProbe:
+          httpGet:
+            path: /api/health
+            port: 3000
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+          
+        # Startup probe for initial container warmup
+        startupProbe:
+          httpGet:
+            path: /api/health
+            port: 3000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 6
+          
+  traffic:
+  - percent: 100
+    latestRevision: true

@@ -2,7 +2,7 @@
 
 ## Google OAuth Configuration
 
-Your Google OAuth credentials have been configured:
+Configure your Google OAuth credentials:
 - **Client ID**: `your-google-client-id-here.apps.googleusercontent.com`
 - **Client Secret**: `GOCSPX-your-google-client-secret-here`
 
@@ -18,7 +18,7 @@ NEXTAUTH_URL=http://localhost:3000
 NEXTAUTH_SECRET=your-nextauth-secret-key-here
 JWT_SECRET=your-jwt-secret-key-here
 
-# Google OAuth (ALREADY CONFIGURED)
+# Google OAuth (CONFIGURE WITH YOUR CREDENTIALS)
 GOOGLE_CLIENT_ID=your-google-client-id-here.apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=GOCSPX-your-google-client-secret-here
 

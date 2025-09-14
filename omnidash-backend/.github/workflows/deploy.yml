@@ -1,0 +1,162 @@
+name: Deploy to Google Cloud
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  PROJECT_ID: omnidashv2
+  REGION: australia-southeast2
+  SERVICE_ACCOUNT_KEY: ${{ secrets.GCP_SA_KEY }}
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: |
+            omnidash-frontend/package-lock.json
+            omnidash-backend/package-lock.json
+
+      - name: Install Frontend Dependencies
+        run: |
+          cd omnidash-frontend
+          npm ci
+
+      - name: Install Backend Dependencies
+        run: |
+          cd omnidash-backend
+          npm ci
+
+      - name: Run Frontend Tests
+        run: |
+          cd omnidash-frontend
+          npm run test
+
+      - name: Run Backend Tests
+        run: |
+          cd omnidash-backend
+          npm run test
+
+      - name: Run Security Audit
+        run: |
+          cd omnidash-frontend
+          npm audit --audit-level=moderate
+          cd ../omnidash-backend
+          npm audit --audit-level=moderate
+
+  build-and-deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Google Cloud CLI
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          service_account_key: ${{ secrets.GCP_SA_KEY }}
+          project_id: ${{ env.PROJECT_ID }}
+
+      - name: Configure Docker
+        run: gcloud auth configure-docker
+
+      - name: Build and Deploy Frontend
+        run: |
+          cd omnidash-frontend
+          gcloud run deploy omnidash-frontend \
+            --source . \
+            --region ${{ env.REGION }} \
+            --platform managed \
+            --allow-unauthenticated \
+            --set-env-vars NEXT_PUBLIC_API_URL=https://omnidash-backend-${{ github.sha }}.australia-southeast2.run.app
+
+      - name: Build and Deploy Backend
+        run: |
+          cd omnidash-backend
+          gcloud run deploy omnidash-backend \
+            --source . \
+            --region ${{ env.REGION }} \
+            --platform managed \
+            --allow-unauthenticated \
+            --set-env-vars DATABASE_URL=${{ secrets.DATABASE_URL }},JWT_SECRET=${{ secrets.JWT_SECRET }},GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }},GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
+
+      - name: Deploy AI Services
+        run: |
+          cd omnidash-backend/src/ai
+          gcloud run deploy omnidash-ai-services \
+            --source . \
+            --region ${{ env.REGION }} \
+            --platform managed \
+            --allow-unauthenticated \
+            --set-env-vars GOOGLE_APPLICATION_CREDENTIALS=/workspace/service-account.json
+
+      - name: Run Database Migrations
+        run: |
+          gcloud run services proxy omnidash-backend --port=8080 &
+          sleep 10
+          curl -X POST http://localhost:8080/api/migrate
+          pkill -f "gcloud run services proxy"
+
+      - name: Deploy to Staging
+        run: |
+          gcloud run deploy omnidash-staging \
+            --source . \
+            --region ${{ env.REGION }} \
+            --platform managed \
+            --allow-unauthenticated \
+            --set-env-vars ENVIRONMENT=staging
+
+  security-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v2
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  performance-test:
+    needs: build-and-deploy
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install Artillery
+        run: npm install -g artillery
+
+      - name: Run Performance Tests
+        run: |
+          artillery run omnidash-backend/tests/performance/load-test.yml
+
+      - name: Upload Performance Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-results
+          path: omnidash-backend/tests/performance/results/

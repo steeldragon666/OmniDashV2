@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 
-export async function POST(_request: NextRequest) {
+export async function POST() {
   try {
     // Create a test session for development purposes
     const testSession = {
@@ -31,7 +31,7 @@ export async function POST(_request: NextRequest) {
       session: testSession,
       success: true
     });
-  } catch (_error) {
+  } catch {
     return NextResponse.json(
       { error: 'Failed to create test session' },
       { status: 500 }
@@ -39,7 +39,7 @@ export async function POST(_request: NextRequest) {
   }
 }
 
-export async function GET(_request: NextRequest) {
+export async function GET() {
   return NextResponse.json({ 
     message: 'Test session endpoint',
     instructions: 'POST to this endpoint to create a test session for development'

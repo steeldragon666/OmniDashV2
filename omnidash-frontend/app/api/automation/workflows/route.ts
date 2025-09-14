@@ -4,7 +4,7 @@ import { supabaseAdmin } from '@/lib/database/supabase';
 import { Workflow } from '@/lib/types/workflow';
 
 // GET /api/automation/workflows - List all workflows
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const session = await getServerSession();
     

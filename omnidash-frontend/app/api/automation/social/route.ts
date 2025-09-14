@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 // GET /api/automation/social - List social automation data
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     // Mock social automation data
     const socialData = {
@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
 }
 
 // POST /api/automation/social - Create social automation
-export async function POST(_request: NextRequest) {
+export async function POST() {
   try {
     const body = await request.json();
     const { type, config } = body;

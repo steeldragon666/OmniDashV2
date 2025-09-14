@@ -9,7 +9,7 @@ const supabase = createClient(
 );
 
 // GET /api/brands - Get user's brands
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const session = await getServerSession(authOptions);
     

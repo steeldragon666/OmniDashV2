@@ -1,0 +1,109 @@
+config:
+  target: 'https://omnidash-backend.australia-southeast2.run.app'
+  phases:
+    - duration: 60
+      arrivalRate: 5
+      name: "Warm up"
+    - duration: 120
+      arrivalRate: 10
+      name: "Ramp up load"
+    - duration: 300
+      arrivalRate: 20
+      name: "Sustained load"
+    - duration: 60
+      arrivalRate: 5
+      name: "Ramp down"
+  defaults:
+    headers:
+      Content-Type: 'application/json'
+      Authorization: 'Bearer {{ $processEnvironment.TEST_TOKEN }}'
+
+scenarios:
+  - name: "API Health Check"
+    weight: 10
+    flow:
+      - get:
+          url: "/api/health"
+
+  - name: "Authentication Flow"
+    weight: 20
+    flow:
+      - post:
+          url: "/api/auth/login"
+          json:
+            email: "test@example.com"
+            password: "testpassword"
+          capture:
+            - json: "$.token"
+              as: "authToken"
+      - get:
+          url: "/api/auth/me"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+
+  - name: "Dashboard Data"
+    weight: 15
+    flow:
+      - get:
+          url: "/api/dashboard/stats"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+
+  - name: "Workflow Management"
+    weight: 15
+    flow:
+      - get:
+          url: "/api/workflows"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+      - post:
+          url: "/api/workflows"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          json:
+            name: "Test Workflow"
+            description: "Performance test workflow"
+            steps: []
+
+  - name: "Social Media Integration"
+    weight: 10
+    flow:
+      - get:
+          url: "/api/social/accounts"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+
+  - name: "Analytics Data"
+    weight: 10
+    flow:
+      - get:
+          url: "/api/analytics/overview"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+
+  - name: "GCP Integration"
+    weight: 10
+    flow:
+      - get:
+          url: "/api/gcp/projects"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+
+  - name: "Vertex AI Integration"
+    weight: 10
+    flow:
+      - get:
+          url: "/api/vertex-ai/agents"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+
+  - name: "Cloud Client API"
+    weight: 10
+    flow:
+      - post:
+          url: "/api/cloud-client/generate-chart"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          json:
+            type: "bar"
+            data: [{"x": "Jan", "y": 100}, {"x": "Feb", "y": 150}]

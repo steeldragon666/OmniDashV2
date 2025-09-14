@@ -10,369 +10,1093 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// =====================================================================================
+// USER MANAGEMENT & AUTHENTICATION
+// =====================================================================================
+
 model User {
-  id          String   @id @default(cuid())
-  email       String   @unique
-  name        String?
-  avatar      String?
-  role        String   @default("user") // user, admin, super_admin
-  isActive    Boolean  @default(true)
-  lastLogin   DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id                String    @id @default(cuid())
+  email             String    @unique
+  username          String?   @unique
+  firstName         String?
+  lastName          String?
+  avatar            String?
+  bio               String?
+  role              UserRole  @default(USER)
+  status            UserStatus @default(ACTIVE)
+  emailVerified     Boolean   @default(false)
+  emailVerifiedAt   DateTime?
+  lastLoginAt       DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 
   // Authentication
-  password    String?
-  googleId    String?  @unique
-  githubId    String?  @unique
-  microsoftId String?  @unique
+  accounts          Account[]
+  sessions          Session[]
+  verificationTokens VerificationToken[]
 
-  // Profile settings
-  timezone    String   @default("UTC")
-  preferences Json?    // JSON object for user preferences
+  // User preferences
+  preferences       UserPreferences?
   
-  // Relationships
-  brands      BrandMember[]
-  sessions    UserSession[]
+  // User activity
+  activityLogs      ActivityLog[]
+  
+  // User content
+  posts             Post[]
+  comments          Comment[]
+  likes             Like[]
+  
+  // User projects
+  projects          Project[]
+  projectMembers    ProjectMember[]
+  
+  // User workflows
+  workflows         Workflow[]
+  workflowExecutions WorkflowExecution[]
+  
+  // User AI generations
+  aiGenerations     AIGeneration[]
+  
+  // User social media accounts
+  socialAccounts    SocialAccount[]
+  
+  // User analytics
+  analytics         Analytics[]
+  
+  // User notifications
+  notifications     Notification[]
+  
+  // User subscriptions
+  subscriptions     Subscription[]
+  
+  // User training jobs
+  trainingJobs      TrainingJob[]
+  
+  // User content queue
+  contentQueue      ContentQueue[]
+  
+  // User tasks (assigned)
+  assignedTasks     Task[]
+  
+  // User reports
+  reports           Report[]
+  
+  // User integrations
+  integrations      Integration[]
+  
+  // User API keys
+  apiKeys           APIKey[]
+  
+  // User brands
+  brands            Brand[]
   
   @@map("users")
 }
 
-model UserSession {
-  id        String   @id @default(cuid())
-  userId    String
-  token     String   @unique
-  expiresAt DateTime
-  createdAt DateTime @default(now())
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
   
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   
-  @@map("user_sessions")
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
 }
 
-model Brand {
-  id          String   @id @default(cuid())
-  name        String
-  slug        String   @unique
-  description String?
-  logo        String?
-  website     String?
-  industry    String?
-  
-  // Branding
-  themeConfig Json?    // Colors, fonts, etc.
-  
-  // Status
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
-  // Relationships
-  members         BrandMember[]
-  socialAccounts  SocialAccount[]
-  posts          Post[]
-  contentQueue   ContentQueue[]
-  workflows      Workflow[]
-  analytics      AnalyticsData[]
-  sentiment      SentimentAnalysis[]
-  templates      ContentTemplate[]
-  
-  @@map("brands")
-}
-
-model BrandMember {
-  id          String   @id @default(cuid())
-  brandId     String
-  userId      String
-  role        String   // owner, admin, editor, viewer
-  permissions Json?    // Specific permissions object
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
-  brand Brand @relation(fields: [brandId], references: [id], onDelete: Cascade)
-  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  @@unique([brandId, userId])
-  @@map("brand_members")
-}
-
-model SocialAccount {
+model Session {
   id           String   @id @default(cuid())
-  brandId      String
-  platform     String   // twitter, instagram, linkedin, tiktok, facebook
-  accountId    String   // Platform-specific account ID
-  username     String?  // Platform username/handle
-  displayName  String?  // Display name on platform
-  
-  // Authentication tokens
-  accessToken  String?
-  refreshToken String?
-  tokenExpires DateTime?
-  
-  // Account info
-  isActive     Boolean  @default(true)
-  followers    Int      @default(0)
-  following    Int      @default(0)
-  
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  
-  // Relationships
-  brand Brand @relation(fields: [brandId], references: [id], onDelete: Cascade)
-  posts Post[]
-  
-  @@unique([brandId, platform, accountId])
-  @@map("social_accounts")
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
 }
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  user User @relation(fields: [token], references: [id])
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+enum UserRole {
+  ADMIN
+  USER
+  MODERATOR
+  PREMIUM
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  PENDING
+}
+
+// =====================================================================================
+// USER PREFERENCES & SETTINGS
+// =====================================================================================
+
+model UserPreferences {
+  id                    String  @id @default(cuid())
+  userId                String  @unique
+  theme                 String  @default("light")
+  language              String  @default("en")
+  timezone              String  @default("UTC")
+  emailNotifications    Boolean @default(true)
+  pushNotifications     Boolean @default(true)
+  smsNotifications      Boolean @default(false)
+  marketingEmails       Boolean @default(false)
+  dataSharing           Boolean @default(false)
+  twoFactorEnabled      Boolean @default(false)
+  apiKey                String? @unique
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_preferences")
+}
+
+// =====================================================================================
+// ACTIVITY LOGGING
+// =====================================================================================
+
+model ActivityLog {
+  id          String       @id @default(cuid())
+  userId      String
+  action      String
+  resource    String?
+  resourceId  String?
+  details     Json?
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime     @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("activity_logs")
+}
+
+// =====================================================================================
+// CONTENT MANAGEMENT
+// =====================================================================================
 
 model Post {
-  id          String   @id @default(cuid())
-  brandId     String
-  socialAccountId String?
-  platform    String   // twitter, instagram, linkedin, tiktok, facebook
-  
-  // Content
-  content     String?
-  mediaUrls   String[] // Array of media URLs
-  hashtags    String[]
-  mentions    String[]
-  
-  // Scheduling
-  status      String   @default("draft") // draft, scheduled, published, failed
-  scheduledAt DateTime?
+  id          String      @id @default(cuid())
+  title       String
+  content     String      @db.Text
+  excerpt     String?
+  slug        String      @unique
+  status      PostStatus  @default(DRAFT)
   publishedAt DateTime?
-  
-  // Platform-specific data
-  platformId  String?  // ID from the social platform
-  platformData Json?   // Additional platform-specific data
-  
-  // Metadata
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
-  // Relationships
-  brand         Brand          @relation(fields: [brandId], references: [id], onDelete: Cascade)
-  socialAccount SocialAccount? @relation(fields: [socialAccountId], references: [id])
-  analytics     PostAnalytics[]
-  
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  authorId    String
+
+  author      User        @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  comments    Comment[]
+  likes       Like[]
+  tags        PostTag[]
+  categories  PostCategory[]
+  media       Media[]
+
   @@map("posts")
 }
 
-model PostAnalytics {
-  id             String   @id @default(cuid())
-  postId         String
-  
-  // Engagement metrics
-  likes          Int      @default(0)
-  shares         Int      @default(0)
-  comments       Int      @default(0)
-  clicks         Int      @default(0)
-  reach          Int      @default(0)
-  impressions    Int      @default(0)
-  
-  // Calculated metrics
-  engagementRate Float    @default(0.0)
-  
-  // Time-based data
-  date           DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  
-  // Relationships
-  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
-  
-  @@unique([postId, date])
-  @@map("post_analytics")
+model Comment {
+  id        String   @id @default(cuid())
+  content   String   @db.Text
+  parentId  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  authorId  String
+  postId    String
+
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  parent    Comment? @relation("CommentReplies", fields: [parentId], references: [id])
+  replies   Comment[] @relation("CommentReplies")
+  likes     Like[]
+
+  @@map("comments")
 }
 
-model ContentQueue {
-  id             String   @id @default(cuid())
-  brandId        String
-  platform       String
-  
-  // Generated content
-  generatedContent Json   // Multiple content variations
-  selectedContent  String? // User-selected final content
-  
-  // AI generation data
-  aiProvider     String?  // claude, openai, manus
-  prompt         String?
-  generationData Json?
-  
-  // Status
-  status         String   @default("pending") // pending, approved, rejected, scheduled
-  approvalStatus String   @default("pending") // pending, approved, rejected
-  approvedBy     String?  // User ID who approved
-  
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  
-  // Relationships
-  brand Brand @relation(fields: [brandId], references: [id], onDelete: Cascade)
-  
-  @@map("content_queue")
+model Like {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  userId    String
+  postId    String?
+  commentId String?
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post      Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  comment   Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, postId])
+  @@unique([userId, commentId])
+  @@map("likes")
 }
 
-model ContentTemplate {
-  id           String   @id @default(cuid())
-  brandId      String
-  name         String
-  description  String?
-  category     String?  // promotional, educational, engagement, etc.
+model Tag {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  slug      String   @unique
+  color     String?
+  createdAt DateTime @default(now())
   
-  // Template content
-  template     String   // Template with variables
-  variables    Json     // Variable definitions
-  platforms    String[] // Supported platforms
+  posts     PostTag[]
   
-  // Usage stats
-  usageCount   Int      @default(0)
-  
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  
-  // Relationships
-  brand Brand @relation(fields: [brandId], references: [id], onDelete: Cascade)
-  
-  @@map("content_templates")
+  @@map("tags")
 }
 
-model Workflow {
+model Category {
   id          String   @id @default(cuid())
-  brandId     String
-  name        String
+  name        String   @unique
+  slug        String   @unique
   description String?
-  
-  // Workflow configuration
-  n8nWorkflowId String? // N8N workflow ID
-  triggerConfig Json    // Trigger configuration
-  actions       Json    // Workflow actions
-  
-  // Status
-  status      String   @default("inactive") // active, inactive, error
-  isActive    Boolean  @default(false)
-  
+  parentId    String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   
-  // Relationships
-  brand Brand @relation(fields: [brandId], references: [id], onDelete: Cascade)
-  logs  AutomationLog[]
+  parent      Category? @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children    Category[] @relation("CategoryHierarchy")
+  posts       PostCategory[]
+
+  @@map("categories")
+}
+
+model PostTag {
+  postId String
+  tagId  String
+
+  post   Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  tag    Tag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([postId, tagId])
+  @@map("post_tags")
+}
+
+model PostCategory {
+  postId     String
+  categoryId String
+
+  post       Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([postId, categoryId])
+  @@map("post_categories")
+}
+
+enum PostStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+  DELETED
+}
+
+// =====================================================================================
+// MEDIA MANAGEMENT
+// =====================================================================================
+
+model Media {
+  id          String      @id @default(cuid())
+  filename    String
+  originalName String
+  mimeType    String
+  size        Int
+  url         String
+  thumbnailUrl String?
+  alt         String?
+  caption     String?
+  metadata    Json?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  postId      String?
+
+  post        Post?       @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@map("media")
+}
+
+// =====================================================================================
+// PROJECT MANAGEMENT
+// =====================================================================================
+
+model Project {
+  id          String        @id @default(cuid())
+  name        String
+  description String?       @db.Text
+  status      ProjectStatus @default(PLANNING)
+  priority    Priority      @default(MEDIUM)
+  startDate   DateTime?
+  endDate     DateTime?
+  budget      Decimal?
+  progress    Int           @default(0)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  ownerId     String
+
+  owner       User          @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  members     ProjectMember[]
+  tasks       Task[]
+  milestones  Milestone[]
+  documents   Document[]
+
+  @@map("projects")
+}
+
+model ProjectMember {
+  id        String        @id @default(cuid())
+  role      ProjectRole   @default(MEMBER)
+  joinedAt  DateTime      @default(now())
+  userId    String
+  projectId String
+
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project   Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, projectId])
+  @@map("project_members")
+}
+
+model Task {
+  id          String     @id @default(cuid())
+  title       String
+  description String?    @db.Text
+  status      TaskStatus @default(TODO)
+  priority    Priority   @default(MEDIUM)
+  dueDate     DateTime?
+  completedAt DateTime?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  projectId   String
+  assigneeId  String?
+
+  project     Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  assignee    User?      @relation(fields: [assigneeId], references: [id])
+
+  @@map("tasks")
+}
+
+model Milestone {
+  id          String   @id @default(cuid())
+  title       String
+  description String?  @db.Text
+  dueDate     DateTime
+  completedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  projectId   String
+
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@map("milestones")
+}
+
+model Document {
+  id          String   @id @default(cuid())
+  title       String
+  content     String?  @db.Text
+  type        String
+  url         String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  projectId   String
+
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@map("documents")
+}
+
+enum ProjectStatus {
+  PLANNING
+  ACTIVE
+  ON_HOLD
+  COMPLETED
+  CANCELLED
+}
+
+enum ProjectRole {
+  OWNER
+  ADMIN
+  MEMBER
+  VIEWER
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  REVIEW
+  COMPLETED
+  CANCELLED
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+// =====================================================================================
+// WORKFLOW AUTOMATION
+// =====================================================================================
+
+model Workflow {
+  id          String        @id @default(cuid())
+  name        String
+  description String?       @db.Text
+  trigger     Json
+  steps       Json
+  status      WorkflowStatus @default(ACTIVE)
+  isPublic    Boolean       @default(false)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  ownerId     String
+
+  owner       User          @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  executions  WorkflowExecution[]
   
   @@map("workflows")
 }
 
-model AutomationLog {
-  id          String   @id @default(cuid())
+model WorkflowExecution {
+  id          String              @id @default(cuid())
+  status      ExecutionStatus     @default(PENDING)
+  startedAt   DateTime            @default(now())
+  completedAt DateTime?
+  error       String?             @db.Text
+  result      Json?
   workflowId  String
-  executionId String?  // N8N execution ID
-  
-  // Execution data
-  status      String   // success, failure, partial
-  errorMessage String?
-  executionData Json?
-  
-  executedAt  DateTime @default(now())
-  
-  // Relationships
-  workflow Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
-  
-  @@map("automation_logs")
+  userId      String
+
+  workflow    Workflow            @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  user        User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("workflow_executions")
 }
 
-model AnalyticsData {
-  id         String   @id @default(cuid())
-  brandId    String
-  platform   String?  // null for brand-wide metrics
-  
-  // Metrics
-  date       DateTime
-  metricName String   // followers_count, engagement_rate, reach, etc.
-  metricValue Float
-  
-  // Additional context
-  metadata   Json?
-  
-  createdAt  DateTime @default(now())
-  
-  // Relationships
-  brand Brand @relation(fields: [brandId], references: [id], onDelete: Cascade)
-  
-  @@unique([brandId, platform, date, metricName])
-  @@map("analytics_data")
+enum WorkflowStatus {
+  ACTIVE
+  INACTIVE
+  DRAFT
 }
 
-model SentimentAnalysis {
+enum ExecutionStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+// =====================================================================================
+// AI GENERATION & MODELS
+// =====================================================================================
+
+model AIGeneration {
+  id          String            @id @default(cuid())
+  type        GenerationType
+  model       String
+  prompt      String            @db.Text
+  response    String            @db.Text
+  metadata    Json?
+  tokens      Int?
+  cost        Decimal?
+  status      GenerationStatus  @default(COMPLETED)
+  createdAt   DateTime          @default(now())
+  userId      String
+
+  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("ai_generations")
+}
+
+enum GenerationType {
+  TEXT
+  IMAGE
+  VIDEO
+  AUDIO
+  MULTIMODAL
+}
+
+enum GenerationStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+// =====================================================================================
+// SOCIAL MEDIA INTEGRATION
+// =====================================================================================
+
+model SocialAccount {
+  id              String            @id @default(cuid())
+  platform        SocialPlatform
+  accountId       String
+  username        String?
+  displayName     String?
+  avatar          String?
+  accessToken     String?           @db.Text
+  refreshToken    String?           @db.Text
+  tokenExpiresAt  DateTime?
+  isActive        Boolean           @default(true)
+  lastSyncAt      DateTime?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  userId          String
+
+  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  posts           SocialPost[]
+
+  @@unique([platform, accountId])
+  @@map("social_accounts")
+}
+
+model SocialPost {
+  id              String            @id @default(cuid())
+  platform        SocialPlatform
+  platformPostId  String
+  content         String            @db.Text
+  mediaUrls       String[]
+  status          PostStatus        @default(PUBLISHED)
+  publishedAt     DateTime
+  metrics         Json?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  accountId       String
+
+  account         SocialAccount     @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@unique([platform, platformPostId])
+  @@map("social_posts")
+}
+
+enum SocialPlatform {
+  TWITTER
+  LINKEDIN
+  FACEBOOK
+  INSTAGRAM
+  PINTEREST
+  YOUTUBE
+  TIKTOK
+  DISCORD
+  SLACK
+}
+
+// =====================================================================================
+// ANALYTICS & REPORTING
+// =====================================================================================
+
+model Analytics {
+  id          String        @id @default(cuid())
+  type        AnalyticsType
+  metric      String
+  value       Decimal
+  dimensions  Json?
+  date        DateTime
+  createdAt   DateTime      @default(now())
+  userId      String
+
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("analytics")
+}
+
+model Report {
+  id          String      @id @default(cuid())
+  name        String
+  description String?     @db.Text
+  type        ReportType
+  config      Json
+  schedule    String?
+  lastRunAt   DateTime?
+  nextRunAt   DateTime?
+  isActive    Boolean     @default(true)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  ownerId     String
+
+  owner       User        @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  executions  ReportExecution[]
+
+  @@map("reports")
+}
+
+model ReportExecution {
+  id          String           @id @default(cuid())
+  status      ExecutionStatus  @default(PENDING)
+  startedAt   DateTime         @default(now())
+  completedAt DateTime?
+  result      Json?
+  error       String?          @db.Text
+  reportId    String
+
+  report      Report           @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  @@map("report_executions")
+}
+
+enum AnalyticsType {
+  WEBSITE
+  SOCIAL_MEDIA
+  EMAIL
+  SALES
+  USER_ENGAGEMENT
+  AI_USAGE
+  WORKFLOW
+  PROJECT
+}
+
+enum ReportType {
+  DASHBOARD
+  SCHEDULED
+  AD_HOC
+  EXPORT
+}
+
+// =====================================================================================
+// NOTIFICATIONS
+// =====================================================================================
+
+model Notification {
+  id        String             @id @default(cuid())
+  title     String
+  message   String             @db.Text
+  type      NotificationType
+  data      Json?
+  read      Boolean            @default(false)
+  createdAt DateTime           @default(now())
+  userId    String
+
+  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+enum NotificationType {
+  INFO
+  SUCCESS
+  WARNING
+  ERROR
+  SYSTEM
+  WORKFLOW
+  PROJECT
+  SOCIAL
+}
+
+// =====================================================================================
+// SUBSCRIPTIONS & BILLING
+// =====================================================================================
+
+model Subscription {
+  id                String             @id @default(cuid())
+  plan              SubscriptionPlan
+  status            SubscriptionStatus @default(ACTIVE)
+  currentPeriodStart DateTime
+  currentPeriodEnd   DateTime
+  cancelAtPeriodEnd Boolean            @default(false)
+  canceledAt        DateTime?
+  trialStart        DateTime?
+  trialEnd          DateTime?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  userId            String
+
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("subscriptions")
+}
+
+enum SubscriptionPlan {
+  FREE
+  BASIC
+  PRO
+  ENTERPRISE
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  CANCELED
+  PAST_DUE
+  UNPAID
+  TRIALING
+}
+
+// =====================================================================================
+// INTEGRATIONS & API KEYS
+// =====================================================================================
+
+model Integration {
+  id          String           @id @default(cuid())
+  name        String
+  type        IntegrationType
+  config      Json
+  isActive    Boolean          @default(true)
+  lastSyncAt  DateTime?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  userId      String
+
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("integrations")
+}
+
+model APIKey {
   id          String   @id @default(cuid())
-  brandId     String
-  
-  // Content analyzed
-  content     String
-  source      String   // post, comment, mention, news
-  platform    String?  // Source platform
-  
-  // Analysis results
-  sentiment   String   // positive, negative, neutral
-  score       Float    // -1.0 to 1.0
-  confidence  Float    // 0.0 to 1.0
-  keywords    String[]
-  entities    Json?    // Named entities found
-  
-  analyzedAt  DateTime @default(now())
-  
-  // Relationships
-  brand Brand @relation(fields: [brandId], references: [id], onDelete: Cascade)
-  
-  @@map("sentiment_analysis")
-}
-
-model ApiKey {
-  id          String   @id @default(cuid())
-  brandId     String?  // null for user-level keys
-  userId      String?  // null for brand-level keys
-  
-  service     String   // openai, claude, google, twitter, etc.
-  keyName     String   // Descriptive name
-  encryptedKey String  // Encrypted API key
-  
-  // Permissions and limits
-  permissions Json?
-  rateLimit   Int?
-  
-  isActive    Boolean  @default(true)
+  name        String
+  key         String   @unique
+  permissions Json
+  lastUsedAt  DateTime?
   expiresAt   DateTime?
-  
+  isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  userId      String
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   @@map("api_keys")
 }
 
-model SystemSettings {
-  id        String   @id @default(cuid())
-  key       String   @unique
-  value     Json
-  category  String?  // system, features, limits, etc.
-  
-  updatedAt DateTime @updatedAt
-  
-  @@map("system_settings")
+enum IntegrationType {
+  GOOGLE_ANALYTICS
+  GOOGLE_ADS
+  FACEBOOK_ADS
+  TWITTER_ADS
+  LINKEDIN_ADS
+  MAILCHIMP
+  HUBSPOT
+  SALESFORCE
+  ZAPIER
+  WEBHOOK
+  CUSTOM
 }
+
+// =====================================================================================
+// ENTERPRISE AI TRAINING
+// =====================================================================================
+
+model TrainingJob {
+  id                    String            @id @default(cuid())
+  userId                String
+  name                  String
+  status                TrainingJobStatus @default(PENDING)
+  config                Json
+  optimizedConfig       Json
+  budget                Decimal
+  priority              TrainingPriority
+  cloudProvider         CloudProvider
+  dataSize              DataSize
+  modelArchitecture     ModelArchitecture
+  optimizationStrategy  OptimizationStrategy
+  learningRateSchedule  LearningRateSchedule
+  regularization        Regularization
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+  startedAt             DateTime?
+  completedAt           DateTime?
+  finalAccuracy         Decimal?
+  finalCost             Decimal?
+
+  user                  User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  trainingStatus        TrainingStatus?
+  trainingMetrics       TrainingMetrics[]
+  modelDeployments      ModelDeployment[]
+  trainingHistory       TrainingHistory[]
+
+  @@map("training_jobs")
+}
+
+model TrainingStatus {
+  id                    String            @id @default(cuid())
+  jobId                 String            @unique
+  status                TrainingStatusType @default(IDLE)
+  progress              Float             @default(0)
+  currentStep           String
+  gpusActive            Int               @default(0)
+  totalGpus             Int               @default(0)
+  costSpent             Decimal           @default(0)
+  estimatedCompletion   String?
+  currentEpoch          Int               @default(0)
+  totalEpochs           Int               @default(0)
+  bestAccuracy          Float             @default(0)
+  trainingLoss          Float             @default(0)
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+
+  job                   TrainingJob       @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@map("training_status")
+}
+
+model TrainingMetrics {
+  id              String   @id @default(cuid())
+  jobId           String
+  epoch           Int
+  accuracy        Float
+  loss            Float
+  learningRate    Float
+  gpuUtilization  Float
+  memoryUsage     Float
+  timestamp       DateTime @default(now())
+
+  job             TrainingJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@map("training_metrics")
+}
+
+model ModelDeployment {
+  id          String           @id @default(cuid())
+  jobId       String
+  status      DeploymentStatus @default(PENDING)
+  endpoint    String?
+  apiKey      String?
+  version     String           @default("1.0.0")
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  job         TrainingJob      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@map("model_deployments")
+}
+
+model TrainingHistory {
+  id        String   @id @default(cuid())
+  jobId     String
+  action    String
+  details   Json?
+  timestamp DateTime @default(now())
+
+  job       TrainingJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@map("training_history")
+}
+
+enum TrainingJobStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum TrainingStatusType {
+  IDLE
+  CONFIGURING
+  LAUNCHING
+  TRAINING
+  VALIDATING
+  DEPLOYING
+  COMPLETE
+  ERROR
+}
+
+enum TrainingPriority {
+  SPEED
+  COST
+  QUALITY
+}
+
+enum CloudProvider {
+  AWS
+  GCP
+  AZURE
+}
+
+enum DataSize {
+  SMALL
+  MEDIUM
+  LARGE
+  XLARGE
+}
+
+enum ModelArchitecture {
+  TRANSFORMER
+  CNN
+  LSTM
+  ENSEMBLE
+}
+
+enum OptimizationStrategy {
+  ADAMW
+  SGD
+  RMSPROP
+  ADAGRAD
+}
+
+enum LearningRateSchedule {
+  COSINE
+  LINEAR
+  EXPONENTIAL
+  STEP
+}
+
+enum Regularization {
+  DROPOUT
+  BATCHNORM
+  LAYERNORM
+  WEIGHT_DECAY
+}
+
+enum DeploymentStatus {
+  PENDING
+  DEPLOYING
+  ACTIVE
+  FAILED
+  INACTIVE
+}
+
+// =====================================================================================
+// CONTENT QUEUE & AI GENERATION
+// =====================================================================================
+
+model ContentQueue {
+  id              String          @id @default(cuid())
+  userId          String
+  type            ContentType
+  prompt          String          @db.Text
+  generatedContent Json?
+  status          QueueStatus     @default(PENDING)
+  priority        Int             @default(0)
+  scheduledAt     DateTime?
+  startedAt       DateTime?
+  completedAt     DateTime?
+  error           String?         @db.Text
+  metadata        Json?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("content_queue")
+}
+
+enum ContentType {
+  TEXT
+  IMAGE
+  VIDEO
+  AUDIO
+  CODE
+  EMAIL
+  SOCIAL_POST
+  BLOG_POST
+  PRODUCT_DESCRIPTION
+  AD_COPY
+}
+
+enum QueueStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+// =====================================================================================
+// BRAND MANAGEMENT
+// =====================================================================================
+
+model Brand {
+  id          String   @id @default(cuid())
+  name        String
+  description String?  @db.Text
+  logo        String?
+  website     String?
+  industry    String?
+  size        String?
+  location    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  userId      String
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("brands")
+}
+
+// =====================================================================================
+// FILE UPLOAD & STORAGE
+// =====================================================================================
 
 model UploadedFile {
   id          String   @id @default(cuid())
-  fileName    String
-  filePath    String   // Path in storage
-  publicUrl   String?  // Public URL if applicable
-  size        Int      // File size in bytes
+  filename    String
+  originalName String
   mimeType    String
-  folder      String?
-  brandId     String?  // Associated brand
-  userId      String?  // User who uploaded
-  isTemporary Boolean  @default(false)
-  isPublic    Boolean  @default(false)
-  
+  size        Int
+  filePath    String
+  url         String
+  bucket      String?
+  metadata    Json?
+  expiresAt   DateTime?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  userId      String?
   
   @@map("uploaded_files")
+}
+
+// =====================================================================================
+// AUTOMATION LOGS
+// =====================================================================================
+
+model AutomationLog {
+  id          String           @id @default(cuid())
+  workflowId  String
+  status      ExecutionStatus  @default(PENDING)
+  startedAt   DateTime         @default(now())
+  completedAt DateTime?
+  error       String?          @db.Text
+  result      Json?
+  details     Json?
+
+  @@map("automation_logs")
+}
+
+// =====================================================================================
+// SYSTEM CONFIGURATION
+// =====================================================================================
+
+model SystemConfig {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String   @db.Text
+  type      String   @default("string")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@map("system_config")
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  action      String
+  resource    String
+  resourceId  String?
+  userId      String?
+  details     Json?
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+  
+  @@map("audit_logs")
 }

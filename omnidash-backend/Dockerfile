@@ -1,69 +1,54 @@
 # Multi-stage build for OmniDash Backend
-FROM node:18-alpine AS builder
+FROM node:18-alpine AS base
 
-# Set working directory
+# Install dependencies only when needed
+FROM base AS deps
+RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
-COPY tsconfig.json ./
+# Install dependencies based on the preferred package manager
+COPY package.json package-lock.json* ./
+RUN npm ci --only=production
 
-# Install dependencies (including dev dependencies for build)
-RUN npm ci
-
-# Copy source code
-COPY src/ ./src/
-COPY prisma/ ./prisma/
-
-# Generate Prisma client
-RUN npx prisma generate
+# Rebuild the source code only when needed
+FROM base AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
 
 # Build the application
 RUN npm run build
 
-# Production stage
-FROM node:18-alpine AS production
-
-# Install dumb-init for proper signal handling
-RUN apk add --no-cache dumb-init
-
-# Create non-root user
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -S omnidash -u 1001
-
-# Set working directory
+# Production image, copy all the files and run the app
+FROM base AS runner
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
+ENV NODE_ENV production
 
-# Install only production dependencies
-RUN npm ci --only=production && npm cache clean --force
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 omnidash
 
-# Copy built application from builder stage
+# Copy the built application
 COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package.json ./package.json
 
-# Create logs directory
-RUN mkdir -p logs && chown -R omnidash:nodejs logs
+# Copy environment configuration
+COPY --from=builder /app/.env.example ./.env
 
-# Change to non-root user
+# Create necessary directories
+RUN mkdir -p /app/logs /app/uploads /app/temp
+RUN chown -R omnidash:nodejs /app
+
 USER omnidash
 
-# Expose port
-EXPOSE 3000
+EXPOSE 3001
+
+ENV PORT 3001
+ENV HOSTNAME "0.0.0.0"
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:3000/health', (res) => { \
-    if (res.statusCode === 200) { \
-      process.exit(0); \
-    } else { \
-      process.exit(1); \
-    } \
-  }).on('error', () => process.exit(1))"
+  CMD curl -f http://localhost:3001/api/health || exit 1
 
-# Start the application with dumb-init
-ENTRYPOINT ["dumb-init", "--"]
-CMD ["node", "dist/server.js"]
+CMD ["node", "dist/index.js"]

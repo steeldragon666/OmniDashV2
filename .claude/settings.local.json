@@ -137,7 +137,13 @@
       "mcp__github__search_repositories",
       "mcp__github__create_repository",
       "Bash(git branch:*)",
-      "Bash(gh:*)"
+      "Bash(gh:*)",
+      "Bash(npx eslint:*)",
+      "Bash(dir)",
+      "Bash(npx tsc:*)",
+      "Bash(chmod:*)",
+      "Bash(gcloud:*)",
+      "Bash(npm test)"
     ],
     "deny": [],
     "ask": []

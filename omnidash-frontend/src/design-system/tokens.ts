@@ -112,6 +112,8 @@ export const colors = {
   },
 };
 
+export default designTokens;
+
 // Typography scale inspired by nature's proportions
 export const typography = {
   fontFamily: {
@@ -336,7 +338,7 @@ export const components = {
   },
 };
 
-export default {
+const designTokens = {
   colors,
   typography,
   spacing,

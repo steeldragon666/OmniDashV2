@@ -9,7 +9,7 @@ export const generateToken = (payload: Omit<JWTPayload, 'iat' | 'exp'>): string 
     expiresIn: JWT_EXPIRES_IN,
     issuer: 'omnidash-api',
     audience: 'omnidash-client'
-  });
+  } as jwt.SignOptions);
 };
 
 export const verifyToken = (token: string): JWTPayload => {
@@ -17,7 +17,7 @@ export const verifyToken = (token: string): JWTPayload => {
     return jwt.verify(token, JWT_SECRET, {
       issuer: 'omnidash-api',
       audience: 'omnidash-client'
-    }) as JWTPayload;
+    } as jwt.VerifyOptions) as JWTPayload;
   } catch (error) {
     throw new Error('Invalid or expired token');
   }
@@ -39,6 +39,6 @@ export const generateRefreshToken = (): string => {
       expiresIn: '30d',
       issuer: 'omnidash-api',
       audience: 'omnidash-client'
-    }
+    } as jwt.SignOptions
   );
 };

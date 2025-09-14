@@ -105,7 +105,7 @@ export default function OnboardingPage() {
               Welcome to OmniDash
             </h1>
             <p className="text-xl text-pilot-dark-300">
-              Let's get your social media management set up
+              Let&apos;s get your social media management set up
             </p>
           </div>
 

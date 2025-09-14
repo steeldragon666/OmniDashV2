@@ -149,7 +149,7 @@ export function SocketProvider({ children }: SocketProviderProps) {
       clearInterval(pingInterval);
       newSocket.close();
     };
-  }, [session?.userId, reconnectAttempts]);
+  }, [session?.userId, reconnectAttempts, socket?.connected]);
 
   // Auto-connect when session is available
   useEffect(() => {
@@ -162,7 +162,7 @@ export function SocketProvider({ children }: SocketProviderProps) {
         socket.close();
       }
     };
-  }, [session?.userId, connect]);
+  }, [session?.userId, connect, socket]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -172,7 +172,7 @@ export function SocketProvider({ children }: SocketProviderProps) {
         setSocket(null);
       }
     };
-  }, []);
+  }, [socket]);
 
   // Socket methods
   const subscribeToWorkflow = useCallback((workflowId: string) => {

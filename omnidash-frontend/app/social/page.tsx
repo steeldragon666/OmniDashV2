@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
-import Link from 'next/link';
-import { useSocket } from '../components/SocketProvider';
+// import Link from 'next/link';
+// import { useSocket } from '../components/SocketProvider';
 
 interface SocialAccount {
   id: string;
@@ -476,11 +476,11 @@ export default function SocialPage() {
   const { data: session } = useSession();
   const [accounts, setAccounts] = useState<SocialAccount[]>([]);
   const [scheduledPosts, setScheduledPosts] = useState<PostSchedule[]>([]);
-  const [campaigns, setCampaigns] = useState<any[]>([]);
+  // const [campaigns, setCampaigns] = useState<any[]>([]); // Currently unused
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('accounts');
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     if (!session) {
       setLoading(false);
       return;
@@ -537,11 +537,11 @@ export default function SocialPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [session]);
 
   useEffect(() => {
     fetchData();
-  }, [session]);
+  }, [session, fetchData]);
 
   const handleConnect = async (platform: string) => {
     try {

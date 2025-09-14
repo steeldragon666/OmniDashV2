@@ -316,7 +316,7 @@ export default function LoginPage() {
         {/* Sign Up Link */}
         <div className="mt-6 text-center">
           <p className="text-sm text-pilot-dark-400 font-sans">
-            Don't have an account?{' '}
+            Don&apos;t have an account?{' '}
             <button className="font-medium text-pilot-purple-400 hover:text-pilot-purple-300 transition-colors font-sans">
               Create account
             </button>

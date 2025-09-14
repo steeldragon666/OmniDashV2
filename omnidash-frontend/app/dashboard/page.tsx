@@ -76,7 +76,7 @@ export default function DashboardPage() {
           </div>
           <h2 className="text-3xl font-bold text-white mb-4">Welcome to OmniDash!</h2>
           <p className="text-pilot-dark-300 mb-8">
-            Let's get you set up with your first brand and social media connections.
+            Let&apos;s get you set up with your first brand and social media connections.
           </p>
           <button
             onClick={() => router.push('/onboarding')}
@@ -169,7 +169,7 @@ export default function DashboardPage() {
       <div className="container mx-auto px-6 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-pilot-dark-100 mb-2">Dashboard</h1>
-          <p className="text-pilot-dark-400">Welcome back! Here's your automation overview.</p>
+          <p className="text-pilot-dark-400">Welcome back! Here&apos;s your automation overview.</p>
         </div>
 
         {/* Stats Grid */}

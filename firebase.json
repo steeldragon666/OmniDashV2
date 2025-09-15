@@ -1,21 +1,51 @@
 {
   "hosting": {
-    "public": "omnidash-frontend/out",
-    "cleanUrls": true,
-    "trailingSlash": false,
+    "public": "out",
     "ignore": [
       "firebase.json",
       "**/.*",
       "**/node_modules/**"
     ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ],
+    "redirects": [
+      {
+        "source": "/dashboard",
+        "destination": "/",
+        "type": 301
+      },
+      {
+        "source": "/app",
+        "destination": "/",
+        "type": 301
+      }
+    ],
     "headers": [
       {
-        "source": "**/*",
+        "source": "**/*.@(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)",
         "headers": [
           {
             "key": "Cache-Control",
-            "value": "public, max-age=3600, s-maxage=86400"
-          },
+            "value": "public, max-age=31536000, immutable"
+          }
+        ]
+      },
+      {
+        "source": "**/*.@(html|json)",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=3600"
+          }
+        ]
+      },
+      {
+        "source": "**",
+        "headers": [
           {
             "key": "X-Content-Type-Options",
             "value": "nosniff"
@@ -25,73 +55,37 @@
             "value": "DENY"
           },
           {
+            "key": "X-XSS-Protection",
+            "value": "1; mode=block"
+          },
+          {
             "key": "Referrer-Policy",
             "value": "strict-origin-when-cross-origin"
-          }
-        ]
-      },
-      {
-        "source": "**/*.@(js|css|png|jpg|jpeg|gif|svg|webp|ico|woff|woff2)",
-        "headers": [
+          },
           {
-            "key": "Cache-Control",
-            "value": "public, max-age=31536000, immutable"
-          }
-        ]
-      },
-      {
-        "source": "/_next/static/**",
-        "headers": [
-          {
-            "key": "Cache-Control",
-            "value": "public, max-age=31536000, immutable"
-          }
-        ]
-      },
-      {
-        "source": "/api/**",
-        "headers": [
-          {
-            "key": "Cache-Control",
-            "value": "no-cache, no-store, must-revalidate"
+            "key": "Permissions-Policy",
+            "value": "camera=(), microphone=(), geolocation=()"
           }
         ]
       }
     ],
-    "rewrites": [
-      {
-        "source": "/api/**",
-        "function": "omnidash-api"
-      },
-      {
-        "source": "**",
-        "destination": "/index.html"
-      }
-    ],
-    "redirects": [
-      {
-        "source": "/home",
-        "destination": "/",
-        "type": 301
-      },
-      {
-        "source": "/dashboard/**",
-        "destination": "/dashboard",
-        "type": 302
-      }
-    ]
+    "cleanUrls": true,
+    "trailingSlash": false
   },
   "functions": {
-    "source": "firebase-functions",
-    "ignore": [
-      "node_modules",
-      ".git",
-      "firebase-debug.log",
-      "firebase-debug.*.log"
-    ],
+    "source": "functions",
+    "runtime": "nodejs18",
     "predeploy": [
-      "npm --prefix=\"firebase-functions\" run build"
+      "npm --prefix \"$RESOURCE_DIR\" run lint",
+      "npm --prefix \"$RESOURCE_DIR\" run build"
     ]
+  },
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "storage": {
+    "rules": "storage.rules"
   },
   "emulators": {
     "auth": {
@@ -106,17 +100,13 @@
     "hosting": {
       "port": 5000
     },
+    "storage": {
+      "port": 9199
+    },
     "ui": {
       "enabled": true,
       "port": 4000
     },
     "singleProjectMode": true
-  },
-  "storage": {
-    "rules": "storage.rules"
-  },
-  "firestore": {
-    "rules": "firestore.rules",
-    "indexes": "firestore.indexes.json"
   }
 }

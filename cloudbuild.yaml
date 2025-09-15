@@ -40,17 +40,24 @@ steps:
       - '-c'
       - |
         cd omnidash-frontend
-<<<<<<< HEAD
         echo "📦 Installing dependencies..."
         npm ci --only=production
         echo "🏗️ Building application..."
-=======
-        npm ci
->>>>>>> 0bdd2d6d008a71194bb9dba2ff3a03d802619e2c
         npm run build
         echo "✅ Frontend build completed"
 
-  # Step 3: Build Docker image for Cloud Run
+  # Step 3: Verify Dockerfile exists before build
+  - name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        cd omnidash-frontend
+        echo "🔍 Checking for Dockerfile..."
+        ls -la Dockerfile
+        echo "✅ Dockerfile found"
+
+  # Step 4: Build Docker image for Cloud Run
   - name: 'gcr.io/cloud-builders/docker'
     args:
       - 'build'
@@ -58,7 +65,9 @@ steps:
       - 'gcr.io/$PROJECT_ID/omnidash-frontend:$BUILD_ID'
       - '-t'
       - 'gcr.io/$PROJECT_ID/omnidash-frontend:latest'
-      - '.'
+      - '-f'
+      - 'omnidash-frontend/Dockerfile'
+      - './omnidash-frontend'
 
   # Step 4: Push to Container Registry
   - name: 'gcr.io/cloud-builders/docker'

@@ -40,7 +40,18 @@
     "supabase:status": "npx supabase status",
     "supabase:reset": "npx supabase db reset",
     "production:ready": "npm run build && node production-check.js",
-    "production:check": "node production-check.js"
+    "production:check": "node production-check.js",
+    "docker:build": "docker build -t omnidash-frontend .",
+    "docker:run": "docker run -p 3000:3000 -e NODE_ENV=production omnidash-frontend",
+    "docker:test": "docker run --rm -p 3000:3000 omnidash-frontend",
+    "docker:shell": "docker run -it --entrypoint=/bin/sh omnidash-frontend",
+    "gcp:deploy": "gcloud run deploy omnidash-frontend --source . --region us-central1 --allow-unauthenticated --memory 2Gi --cpu 2",
+    "gcp:build": "gcloud builds submit --config cloudbuild.yaml .",
+    "gcp:logs": "gcloud run logs tail omnidash-frontend --region us-central1",
+    "gcp:describe": "gcloud run services describe omnidash-frontend --region us-central1",
+    "gcp:delete": "gcloud run services delete omnidash-frontend --region us-central1",
+    "deploy:production": "npm run production:ready && npm run gcp:deploy",
+    "deploy:build": "npm run production:ready && npm run gcp:build"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.61.0",

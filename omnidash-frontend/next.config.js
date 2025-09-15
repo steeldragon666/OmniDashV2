@@ -5,7 +5,7 @@ const nextConfig = {
   
   // Enable experimental features for better performance
   experimental: {
-    serverComponentsExternalPackages: ['@anthropic-ai/sdk', '@supabase/supabase-js', 'winston', 'winston-daily-rotate-file', 'jsonwebtoken', 'rate-limiter-flexible']
+    serverComponentsExternalPackages: ['@anthropic-ai/sdk', '@supabase/supabase-js', 'winston', 'winston-daily-rotate-file', 'jsonwebtoken', 'rate-limiter-flexible', '@google-cloud/bigquery', '@google-cloud/vertexai', '@google-cloud/storage']
   },
   
   // Webpack configuration to handle Node.js modules and optional dependencies

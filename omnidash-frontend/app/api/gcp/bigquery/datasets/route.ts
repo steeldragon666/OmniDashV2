@@ -1,114 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
+import { BigQuery } from '@google-cloud/bigquery';
+import { googleCloudConfig } from '@/lib/config';
 
-// Mock BigQuery datasets
-const mockDatasets = [
-  {
-    id: 'analytics_data',
-    friendlyName: 'Analytics Data',
-    description: 'Web analytics and user behavior data',
-    location: 'australia-southeast2',
-    creationTime: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-    lastModifiedTime: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-    access: [
-      { role: 'OWNER', userByEmail: 'admin@example.com' },
-      { role: 'READER', userByEmail: 'analyst@example.com' },
-    ],
-    tables: [
-      {
-        id: 'user_events',
-        friendlyName: 'User Events',
-        numRows: '2456789',
-        numBytes: '15678900000',
-        type: 'TABLE',
-        schema: {
-          fields: [
-            { name: 'user_id', type: 'STRING', mode: 'REQUIRED' },
-            { name: 'event_name', type: 'STRING', mode: 'REQUIRED' },
-            { name: 'timestamp', type: 'TIMESTAMP', mode: 'REQUIRED' },
-            { name: 'properties', type: 'JSON', mode: 'NULLABLE' },
-          ],
-        },
-      },
-      {
-        id: 'page_views',
-        friendlyName: 'Page Views',
-        numRows: '8901234',
-        numBytes: '45678900000',
-        type: 'TABLE',
-        schema: {
-          fields: [
-            { name: 'session_id', type: 'STRING', mode: 'REQUIRED' },
-            { name: 'page_url', type: 'STRING', mode: 'REQUIRED' },
-            { name: 'timestamp', type: 'TIMESTAMP', mode: 'REQUIRED' },
-            { name: 'user_agent', type: 'STRING', mode: 'NULLABLE' },
-          ],
-        },
-      },
-    ],
-  },
-  {
-    id: 'sales_data',
-    friendlyName: 'Sales Data',
-    description: 'Sales transactions and customer data',
-    location: 'australia-southeast2',
-    creationTime: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString(),
-    lastModifiedTime: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(),
-    access: [
-      { role: 'OWNER', userByEmail: 'admin@example.com' },
-      { role: 'WRITER', userByEmail: 'sales-team@example.com' },
-      { role: 'READER', userByEmail: 'reporting@example.com' },
-    ],
-    tables: [
-      {
-        id: 'transactions',
-        friendlyName: 'Transactions',
-        numRows: '567890',
-        numBytes: '8901234000',
-        type: 'TABLE',
-        schema: {
-          fields: [
-            { name: 'transaction_id', type: 'STRING', mode: 'REQUIRED' },
-            { name: 'customer_id', type: 'STRING', mode: 'REQUIRED' },
-            { name: 'amount', type: 'NUMERIC', mode: 'REQUIRED' },
-            { name: 'currency', type: 'STRING', mode: 'REQUIRED' },
-            { name: 'created_at', type: 'TIMESTAMP', mode: 'REQUIRED' },
-          ],
-        },
-      },
-    ],
-  },
-  {
-    id: 'ml_models',
-    friendlyName: 'ML Models',
-    description: 'Machine learning model training and prediction data',
-    location: 'australia-southeast2',
-    creationTime: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
-    lastModifiedTime: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-    access: [
-      { role: 'OWNER', userByEmail: 'admin@example.com' },
-      { role: 'WRITER', userByEmail: 'ml-team@example.com' },
-    ],
-    tables: [
-      {
-        id: 'training_data',
-        friendlyName: 'Training Data',
-        numRows: '1234567',
-        numBytes: '23456780000',
-        type: 'TABLE',
-        schema: {
-          fields: [
-            { name: 'feature_1', type: 'FLOAT', mode: 'REQUIRED' },
-            { name: 'feature_2', type: 'FLOAT', mode: 'REQUIRED' },
-            { name: 'target', type: 'FLOAT', mode: 'REQUIRED' },
-            { name: 'created_at', type: 'TIMESTAMP', mode: 'REQUIRED' },
-          ],
-        },
-      },
-    ],
-  },
-];
+// Initialize BigQuery client
+function createBigQueryClient() {
+  if (!googleCloudConfig.projectId || !googleCloudConfig.keyFilename) {
+    throw new Error('BigQuery configuration missing. Please set GOOGLE_CLOUD_PROJECT_ID and GOOGLE_APPLICATION_CREDENTIALS');
+  }
+
+  return new BigQuery({
+    projectId: googleCloudConfig.projectId,
+    keyFilename: googleCloudConfig.keyFilename,
+  });
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -118,31 +24,83 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const projectId = searchParams.get('projectId') || 'default-project';
+    const projectId = searchParams.get('projectId') || googleCloudConfig.projectId;
     const includeTables = searchParams.get('includeTables') === 'true';
 
-    let datasets = [...mockDatasets];
+    const bigquery = createBigQueryClient();
 
-    if (!includeTables) {
-      datasets = datasets.map(dataset => ({
-        ...dataset,
-        tables: undefined,
-      }));
-    }
+    // Get all datasets from BigQuery
+    const [datasets] = await bigquery.getDatasets({ projectId });
+
+    const datasetList = await Promise.all(
+      datasets.map(async (dataset) => {
+        const [metadata] = await dataset.getMetadata();
+        const datasetInfo = {
+          id: metadata.datasetReference.datasetId,
+          friendlyName: metadata.friendlyName || metadata.datasetReference.datasetId,
+          description: metadata.description || '',
+          location: metadata.location,
+          creationTime: new Date(parseInt(metadata.creationTime)).toISOString(),
+          lastModifiedTime: new Date(parseInt(metadata.lastModifiedTime)).toISOString(),
+          access: metadata.access || [],
+          tables: [] as any[],
+        };
+
+        if (includeTables) {
+          try {
+            const [tables] = await dataset.getTables();
+            datasetInfo.tables = await Promise.all(
+              tables.map(async (table) => {
+                const [tableMetadata] = await table.getMetadata();
+                return {
+                  id: tableMetadata.tableReference.tableId,
+                  friendlyName: tableMetadata.friendlyName || tableMetadata.tableReference.tableId,
+                  numRows: tableMetadata.numRows || '0',
+                  numBytes: tableMetadata.numBytes || '0',
+                  type: tableMetadata.type || 'TABLE',
+                  schema: tableMetadata.schema,
+                };
+              })
+            );
+          } catch (tableError) {
+            console.warn(`Failed to fetch tables for dataset ${datasetInfo.id}:`, tableError);
+          }
+        }
+
+        return datasetInfo;
+      })
+    );
 
     const response = {
       projectId,
-      datasets,
-      totalDatasets: datasets.length,
-      totalTables: mockDatasets.reduce((sum, dataset) => sum + dataset.tables.length, 0),
+      datasets: datasetList,
+      totalDatasets: datasetList.length,
+      totalTables: datasetList.reduce((sum, dataset) => sum + dataset.tables.length, 0),
       lastUpdated: new Date().toISOString(),
     };
 
     return NextResponse.json(response);
   } catch (error) {
     console.error('BigQuery Datasets error:', error);
+
+    if (error instanceof Error) {
+      if (error.message.includes('configuration missing')) {
+        return NextResponse.json(
+          {
+            error: 'BigQuery not configured',
+            message: 'Please configure Google Cloud credentials and project ID',
+            requiredEnvVars: ['GOOGLE_CLOUD_PROJECT_ID', 'GOOGLE_APPLICATION_CREDENTIALS']
+          },
+          { status: 503 }
+        );
+      }
+    }
+
     return NextResponse.json(
-      { error: 'Failed to fetch BigQuery datasets' },
+      {
+        error: 'Failed to fetch BigQuery datasets',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      },
       { status: 500 }
     );
   }
@@ -168,33 +126,71 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Dataset ID is required' }, { status: 400 });
     }
 
+    const bigquery = createBigQueryClient();
+    const projectId = googleCloudConfig.projectId;
+
     // Check if dataset already exists
-    const existingDataset = mockDatasets.find(ds => ds.id === datasetId);
-    if (existingDataset) {
-      return NextResponse.json(
-        { error: 'Dataset with this ID already exists' },
-        { status: 409 }
-      );
+    try {
+      const dataset = bigquery.dataset(datasetId);
+      const [exists] = await dataset.exists();
+      if (exists) {
+        return NextResponse.json(
+          { error: 'Dataset with this ID already exists' },
+          { status: 409 }
+        );
+      }
+    } catch (checkError) {
+      console.warn('Error checking dataset existence:', checkError);
     }
 
-    const newDataset = {
-      id: datasetId,
+    // Create the dataset
+    const options = {
+      location,
       friendlyName: friendlyName || datasetId,
       description: description || '',
-      location,
-      creationTime: new Date().toISOString(),
-      lastModifiedTime: new Date().toISOString(),
       access: access.length > 0 ? access : [
-        { role: 'OWNER', userByEmail: session.user?.email || 'user@example.com' },
+        {
+          role: 'OWNER',
+          userByEmail: session.user?.email || 'unknown@example.com'
+        },
       ],
+    };
+
+    const [dataset] = await bigquery.createDataset(datasetId, options);
+    const [metadata] = await dataset.getMetadata();
+
+    const newDataset = {
+      id: metadata.datasetReference.datasetId,
+      friendlyName: metadata.friendlyName || metadata.datasetReference.datasetId,
+      description: metadata.description || '',
+      location: metadata.location,
+      creationTime: new Date(parseInt(metadata.creationTime)).toISOString(),
+      lastModifiedTime: new Date(parseInt(metadata.lastModifiedTime)).toISOString(),
+      access: metadata.access || [],
       tables: [],
     };
 
     return NextResponse.json(newDataset, { status: 201 });
   } catch (error) {
     console.error('BigQuery Dataset creation error:', error);
+
+    if (error instanceof Error) {
+      if (error.message.includes('configuration missing')) {
+        return NextResponse.json(
+          {
+            error: 'BigQuery not configured',
+            message: 'Please configure Google Cloud credentials and project ID'
+          },
+          { status: 503 }
+        );
+      }
+    }
+
     return NextResponse.json(
-      { error: 'Failed to create BigQuery dataset' },
+      {
+        error: 'Failed to create BigQuery dataset',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      },
       { status: 500 }
     );
   }

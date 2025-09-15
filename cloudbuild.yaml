@@ -40,9 +40,13 @@ steps:
       - '-c'
       - |
         cd omnidash-frontend
+<<<<<<< HEAD
         echo "📦 Installing dependencies..."
         npm ci --only=production
         echo "🏗️ Building application..."
+=======
+        npm ci
+>>>>>>> 0bdd2d6d008a71194bb9dba2ff3a03d802619e2c
         npm run build
         echo "✅ Frontend build completed"
 
@@ -54,7 +58,7 @@ steps:
       - 'gcr.io/$PROJECT_ID/omnidash-frontend:$BUILD_ID'
       - '-t'
       - 'gcr.io/$PROJECT_ID/omnidash-frontend:latest'
-      - './omnidash-frontend'
+      - '.'
 
   # Step 4: Push to Container Registry
   - name: 'gcr.io/cloud-builders/docker'

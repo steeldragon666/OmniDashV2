@@ -9,7 +9,7 @@ steps:
       - '-c'
       - |
         cd omnidash-frontend
-        npm ci --only=production
+        npm ci
         npm run build
         echo "✅ Frontend build completed"
 
@@ -21,7 +21,7 @@ steps:
       - 'gcr.io/$PROJECT_ID/omnidash-frontend:$BUILD_ID'
       - '-t'
       - 'gcr.io/$PROJECT_ID/omnidash-frontend:latest'
-      - './omnidash-frontend'
+      - '.'
 
   # Push to Container Registry  
   - name: 'gcr.io/cloud-builders/docker'

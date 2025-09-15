@@ -550,7 +550,7 @@ export function WebsiteBuilderTabs({ pages, conversionFunnel, templates, tab = '
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {pages.length > 0 && Object.entries(pages[0].analytics.traffic).map(([source, percentage]) => (
+                {pages.length > 0 ? Object.entries(pages[0].analytics.traffic).map(([source, percentage]) => (
                   <div key={source} className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
                       <div className={`w-3 h-3 rounded-full ${
@@ -567,7 +567,7 @@ export function WebsiteBuilderTabs({ pages, conversionFunnel, templates, tab = '
                       <Progress value={percentage} className="h-1 w-20" />
                     </div>
                   </div>
-                ))}
+                )) : null}
               </div>
             </CardContent>
           </Card>
@@ -578,7 +578,7 @@ export function WebsiteBuilderTabs({ pages, conversionFunnel, templates, tab = '
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {pages.length > 0 && Object.entries(pages[0].analytics.devices).map(([device, percentage]) => {
+                {pages.length > 0 ? Object.entries(pages[0].analytics.devices).map(([device, percentage]) => {
                   const DeviceIcon = getDeviceIcon(device);
                   return (
                     <div key={device} className="flex items-center justify-between">
@@ -592,7 +592,7 @@ export function WebsiteBuilderTabs({ pages, conversionFunnel, templates, tab = '
                       </div>
                     </div>
                   );
-                })}
+                }) : null}
               </div>
             </CardContent>
           </Card>
